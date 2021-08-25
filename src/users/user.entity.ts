@@ -1,6 +1,6 @@
 import { Account, AccountType } from "src/account/account.entity";
 import { Service } from "src/service/service.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from "typeorm";
+import { BeforeUpdate, Column, Entity, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 
 export interface UserDTO {
     username?: string;
@@ -25,6 +25,9 @@ export class User extends Account implements UserDTO {
 
     @Column()
     public avatarResourceUri: string;
+
+    @Column() 
+    public avatarResourceId: string;
 
     @ManyToMany(() => Service, { cascade: true })
     @JoinTable()

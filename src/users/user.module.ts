@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Validator } from '@tsalliance/rest';
 import { UsersController } from './user.controller';
 import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
 @Module({
   controllers: [UsersController],
-  providers: [UserService, Validator],
+  providers: [UserService],
   imports: [
     TypeOrmModule.forFeature([ UserRepository ]),
   ],

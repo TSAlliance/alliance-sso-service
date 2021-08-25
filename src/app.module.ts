@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from './users/user.module';
-import { RolesModule } from './roles/roles.module';
+import { RolesModule } from './roles/role.module';
 import { AuthModule } from './auth/auth.module';
 import { AccountModule } from './account/account.module';
 import { ServiceModule } from './service/service.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { Validator } from '@tsalliance/rest';
+import { ValidatorModule } from '@tsalliance/rest';
 
 @Module({
   imports: [
+    ValidatorModule,
     UsersModule, 
     RolesModule, 
     AuthModule, 
@@ -33,6 +34,5 @@ import { Validator } from '@tsalliance/rest';
     })
   ],
   controllers: [],
-  providers: [Validator],
 })
 export class AppModule {}
