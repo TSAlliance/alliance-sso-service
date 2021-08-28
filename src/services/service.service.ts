@@ -18,14 +18,25 @@ export class ServiceService {
     }
 
     public async findById(serviceId: string): Promise<Service> {
-        return this.serviceRepository.findOne({ id: serviceId })
+        return this.serviceRepository.findOneOrFail({ where: { id: serviceId } })
     }
 
-    public async createService(data: ServiceDTO): Promise<Service> {
+    public async findByCredentials(clientId: string, clientSecret: string): Promise<Service> {
+        return this.serviceRepository.findOneOrFail({ where: { clientId, clientSecret } })
+    }
+
+    public async createService(data: ServiceDTO): Promise<Service> {       
+        const service = new Service();
+
         this.validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().check();
+        if(data.description && this.validator.text("description", data.description).minLen(3).maxLen(120).check()) {
+            service.description = data.description;
+        }
+        
         this.validator.throwErrors();
 
-        const service = new Service(data.title);
+        service.title = data.title;
+        service.isListed = data.isListed;
         return this.serviceRepository.save(service);
     }
 
@@ -33,11 +44,17 @@ export class ServiceService {
         const service: Service = await this.findById(id);        
         if(!service) throw new NotFoundException();
 
-        if(this.validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
-            if(data.title) service.title = data.title;
+        if(data.title && this.validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
+            service.title = data.title;
+        }
+
+        if(data.description && this.validator.text("description", data.description).minLen(3).maxLen(120).check()) {
+            service.description = data.description;
         }
 
         this.validator.throwErrors();
+        service.isListed = data.isListed;
+
         return this.serviceRepository.save(service);
     }
 
@@ -51,8 +68,10 @@ export class ServiceService {
         return this.serviceRepository.save(service);
     }
 
+    
+
     public async deleteService(id: string): Promise<DeleteResult> {
-        return this.serviceRepository.delete({ id });
+        return this.serviceRepository.delete({ id })
     }
 
 }

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Page, Pageable } from 'nestjs-pager';
-import { Service } from 'src/service/service.entity';
-import { ServiceService } from 'src/service/service.service';
-import { Permission } from './permission.entity';
+import { ServiceService } from 'src/services/service.service';
+import { Service } from '../services/service.entity';
+import { Permission, PermissionDTO } from './permission.entity';
 import { PermissionRepository } from './permission.repository';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class PermissionService {
         private serviceService: ServiceService
     ){}
 
-    public async findAll(pageable: Pageable) {
+    public async findAll(@Pageable() pageable: Pageable): Promise<Page<Permission>> {
         return this.permissionRepository.findAll(pageable);
     }
 
@@ -32,5 +32,26 @@ export class PermissionService {
 
     public async getCategorizedByServices(pageable: Pageable): Promise<Page<Service>> {
         return this.serviceService.findAll(pageable, { relations: ["permission"] })
+    }
+
+    public async findByService(serviceId: string): Promise<Permission[]> {
+        return this.permissionRepository.find({
+            where: {
+                service: {
+                    id: serviceId
+                }
+            }
+        })
+    }
+
+    public async registerPermissionsForService(serviceId: string, data: PermissionDTO[]): Promise<Permission[]> {
+        const service: Service = await this.serviceService.findById(serviceId);
+        if(!service) throw new NotFoundException(); 
+
+        return this.permissionRepository.save(data.map((value) => {
+            const p = new Permission(value.title, value.permissionValue, service);
+            p.description = value.description
+            return p;
+        }));
     }
 }

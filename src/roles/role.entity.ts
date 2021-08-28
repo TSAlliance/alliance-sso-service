@@ -16,15 +16,11 @@ export class Role implements RoleDTO {
     @Column({ length: 32, nullable: false, unique: true })
     public title: string;
 
-    @Column({ length: 120 })
+    @Column({ length: 120, nullable: true })
     public description: string;
 
-    @ManyToMany(() => Permission, { eager: true })
+    @ManyToMany(() => Permission, { eager: true, cascade: true })
     @JoinTable()
     public permissions: Permission[]
-
-    constructor(title: string) {
-        this.title = title;
-    }
 
 }

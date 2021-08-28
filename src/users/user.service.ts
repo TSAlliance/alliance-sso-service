@@ -1,21 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validator } from '@tsalliance/rest';
-import { mkdirSync } from 'fs';
-import { existsSync } from 'node:fs';
-import sharp from 'sharp';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Validator } from '@tsalliance/rest';
+import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
 import { UserRepository } from './user.repository';
 
-import { createAvatar } from '@dicebear/avatars';
-import * as defaultAvatarStyles from '@dicebear/avatars-jdenticon-sprites';
-
 @Injectable()
 export class UserService {
-    constructor(private userRepository: UserRepository, private validator: Validator){}
+
+    constructor(
+        @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
+        private userRepository: UserRepository,
+        private validator: Validator
+    ){        
+    }
+
+    public async save(user: User): Promise<User> {
+        return this.userRepository.save(user);
+    }
 
     public async findById(userId: string, withSensitive = false): Promise<User> {
         const attributes: (keyof User)[] = [ "id", "email", "username" ];
-        if(withSensitive) attributes.push("password");
+        if(withSensitive) attributes.push("password");        
 
         return this.userRepository.findOne(userId, { select: attributes });
     }
@@ -27,20 +32,35 @@ export class UserService {
         return this.userRepository.createQueryBuilder().where(`username = :username OR email = :email`, { username, email }).getOne();
     }
 
-    public async createUser(userData: UserDTO): Promise<User> {
-        const existsByUsername = await this.existsByUsername(userData.username);
-        const existsByEmail = await this.existsByEmail(userData.email);
+    public async createUser(data: UserDTO): Promise<User> {
+        const existsByUsername = await this.existsByUsername(data.username);
+        const existsByEmail = await this.existsByEmail(data.email);
 
-        this.validator.text("username", userData.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
-        this.validator.text("email", userData.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByEmail).check();
-        this.validator.password("password", userData.password).required();
+        this.validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
+        this.validator.email("email", data.email).required().unique(() => existsByEmail).check();
+        this.validator.password("password", data.password).required();
         this.validator.throwErrors();
 
-        const result = await this.userRepository.save(new User(userData.username, userData.email, userData.password));
+        const result = await this.userRepository.save(new User(data.username, data.email, data.password));
         delete result.password;
 
-        this.createAvatar(result);
-        return this.userRepository.save(result);
+        try {
+            const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());
+    
+            console.log(result);
+            console.log(avatarSvgData);
+    
+            const avatarResourceInfo = await this.mediaService.setUserAvatar(result.id, avatarSvgData);
+    
+            result.avatarResourceUri = avatarResourceInfo.resourceUri;
+            result.avatarResourceId = avatarResourceInfo.resourceId;
+        } catch (err) {
+            // Do nothing -> Silently fail
+            console.log(err);
+            
+        }
+
+        return result;
     }
 
     public async updateUser(userId: string, userData: UserDTO): Promise<User> {
@@ -53,7 +73,7 @@ export class UserService {
         if(userData.username && this.validator.text("username", userData.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByUsername).check()) {
             user.username = userData.username;
         }
-        if(userData.email && this.validator.text("email", userData.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByEmail).check()) {
+        if(userData.email && this.validator.email("email", userData.username).unique(() => existsByEmail).check()) {
             user.email = userData.email;
         }
 
@@ -62,53 +82,13 @@ export class UserService {
     }
 
     public async existsByUsername(username: string): Promise<boolean> {
+        console.log(await this.userRepository.exists({ where: {username}}));
+        
         return this.userRepository.exists({ where: {username}});
     }
 
     public async existsByEmail(email: string): Promise<boolean> {
         return this.userRepository.exists({ where: {email}});
-    }
-
-    public async uploadAvatar(userId: string, file: Express.Multer.File) {
-        if(!existsSync("./uploads/avatars")) {
-            mkdirSync("./uploads/avatars/", { recursive: true })
-        }
-
-        // TODO: Check mime type (Only png, svg and jpg are supported)
-        file.mimetype
-
-        const user: User = await this.findById(userId);
-        if(!user) throw new NotFoundException();
-
-        const resourceHash: string = RandomUtil.randomString(8);
-        const destFilename: string = userId + "." + resourceHash + ".jpeg";
-
-        user.avatarResourceId = resourceHash;
-        user.avatarResourceUri = "alliance:avatars:" + userId + ":" + resourceHash;
-
-        return this.userRepository.save(user).then(() => {
-            sharp(file.buffer)
-                .resize(128, 128, { fit: "cover", background: { r: 61, g: 69, b: 80, alpha: 1 } })
-                .toFormat("jpeg")
-                .toFile(destFilename);
-        })
-    }
-
-    public async createAvatar(user: User) {
-        const resourceHash: string = RandomUtil.randomString(8);
-        const destFilename: string = user.id + "." + resourceHash + ".jpeg";
-
-        const svgAvatar = createAvatar(defaultAvatarStyles, {
-            height: 128,
-            width: 128,
-            seed: user.username,
-            backgroundColor: "#3d4550"
-        });
-
-        return sharp(svgAvatar)
-                .resize(128, 128, { fit: "cover", background: { r: 61, g: 69, b: 80, alpha: 1 } })
-                .toFormat("jpeg")
-                .toFile(destFilename);
     }
 
 }

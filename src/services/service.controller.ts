@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Pageable } from 'nestjs-pager';
+import { Permission } from 'src/roles/permission.entity';
 import { DeleteResult } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
 import { ServiceService } from './service.service';
@@ -14,7 +15,7 @@ export class ServiceController {
     ){}
 
     @Get()
-    public async listAll(@Pageable() pageable: Pageable) {
+    public async findAll(@Pageable() pageable?: Pageable) {
         return this.serviceService.findAll(pageable);
     }
 

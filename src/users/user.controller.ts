@@ -1,16 +1,18 @@
-import { BadRequestException, Controller, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Body, Controller, Post } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { UserDTO } from "./user.entity";
+import { UserService } from "./user.service";
 
+@ApiTags("User Controller")
 @Controller('users')
 export class UsersController {
 
-    @Post(":userId/avatar")
-    @UseInterceptors(FileInterceptor("avatar"))
-    public async uploadAvatar(@Param("userId") userId: string, @UploadedFile() file: Express.Multer.File) {
-        if(!file) throw new BadRequestException();
-        console.log("Uploaded: " + file?.originalname);
+    constructor(private userService: UserService){}
 
-        
+    @Post()
+    public async createUser(@Body() user: UserDTO) {
+        return this.userService.createUser(user);
     }
+
 
 }

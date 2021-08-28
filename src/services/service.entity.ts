@@ -6,6 +6,12 @@ import { BeforeInsert, Column, Entity } from "typeorm";
 export class ServiceDTO {
     @ApiProperty()
     title: string;
+
+    @ApiProperty({ required: false, default: true })
+    isListed: boolean;
+
+    @ApiProperty({ required: false })
+    description?: string;
 }
 
 @Entity()
@@ -13,14 +19,20 @@ export class Service extends Account implements ServiceDTO {
 
     @Column({ length: 32 })
     public title: string;
+
+    @Column({ length: 120, nullable: true })
+    public description?: string;
+
+    @Column({ nullable: true, default: true })
+    public isListed: boolean;
     
-    @Column()
+    @Column({ nullable: true })
     public backgroundResourceUri: string;
     
-    @Column()
+    @Column({ nullable: true })
     public bannerResourceUri: string;
     
-    @Column()
+    @Column({ nullable: true })
     public iconResourceUri: string;
 
     @Column({ unique: true, nullable: false })
@@ -30,12 +42,10 @@ export class Service extends Account implements ServiceDTO {
     public clientSecret: string;
 
     @Column({ unique: true, nullable: false, update: false })
-    public readonly identifier: string;
+    public identifier: string;
 
-    constructor(title: string) {
+    constructor() {
         super(AccountType.SERVICE)
-        this.title = title;
-        this.identifier = title?.replaceAll(" ", "-").toLowerCase()
     }
 
     public hasPermission(permission: string): boolean {
@@ -47,5 +57,7 @@ export class Service extends Account implements ServiceDTO {
     public populateClientCredentials() {
         this.clientSecret = RandomUtil.generateClientSecret()
         this.clientId = RandomUtil.generateClientId();
+
+        this.identifier = this.title.toLowerCase()
     }
 }

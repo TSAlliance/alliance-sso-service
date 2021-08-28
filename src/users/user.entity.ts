@@ -1,11 +1,20 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { Account, AccountType } from "src/account/account.entity";
-import { Service } from "src/service/service.entity";
-import { BeforeUpdate, Column, Entity, JoinTable, ManyToMany, ManyToOne } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
+import { Service } from "../services/service.entity";
 
-export interface UserDTO {
-    username?: string;
-    email?: string;
-    password?: string;
+export class UserDTO {
+    @ApiProperty({ required: true })
+    username: string;
+
+    @ApiProperty({ required: true })
+    email: string;
+
+    @ApiProperty({ required: true })
+    password: string;
+
+    @ApiProperty({ required: false })
+    discordId?: string;
 }
 
 @Entity()
@@ -20,13 +29,13 @@ export class User extends Account implements UserDTO {
     @Column({ nullable: false })
     public password: string;
 
-    @Column({ unique: true })
-    public discordId: string;
+    @Column({ unique: true, nullable: true })
+    public discordId?: string;
 
-    @Column()
+    @Column({ nullable: true })
     public avatarResourceUri: string;
 
-    @Column() 
+    @Column({ nullable: true })
     public avatarResourceId: string;
 
     @ManyToMany(() => Service, { cascade: true })

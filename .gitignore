@@ -4,6 +4,9 @@
 
 .dev.env
 
+uploads/
+package-lock.json
+
 # Logs
 logs
 *.log

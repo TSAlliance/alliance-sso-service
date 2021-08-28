@@ -1,8 +1,20 @@
-import { Service } from "src/service/service.entity";
+import { ApiProperty } from "@nestjs/swagger";
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Service } from "../services/service.entity";
+
+export class PermissionDTO {
+    @ApiProperty({ required: false, maxLength: 32, minLength: 3 })
+    title: string;
+
+    @ApiProperty({ required: false, maxLength: 120, minLength: 3 })
+    description?: string;
+
+    @ApiProperty({ required: true, maxLength: 120, minLength: 3 })
+    permissionValue: string
+}
 
 @Entity()
-export class Permission {
+export class Permission implements PermissionDTO {
 
     @PrimaryGeneratedColumn("uuid")
     public id: string;
@@ -13,7 +25,7 @@ export class Permission {
     @Column()
     public description?: string;
 
-    @ManyToOne(() => Service, { nullable: false, onDelete: "CASCADE" })
+    @ManyToOne(() => Service, { nullable: true, onDelete: "CASCADE" })
     @JoinColumn()
     public service?: Service;
 
@@ -26,10 +38,10 @@ export class Permission {
      * @param service Service that owns the permission
      * @param value Permission value
      */
-    constructor(title: string, service: Service, value: string) {
+    constructor(title: string, value: string, service?: Service) {
         this.title = title;
-        this.service = service;
         this.permissionValue = "alliance." + (this.service?.id || "default") + "." + value;
+        this.service = service;
     }
 
 }

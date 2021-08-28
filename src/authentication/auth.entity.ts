@@ -20,20 +20,39 @@ export class CredentialsDTO {
     password: string;
 
     @ApiProperty({
-        description: "If true, the session token won't have an expiry date."
+        description: "If true, the session token won't have an expiry date.",
+        default: false,
+        required: false
     })
     stayLoggedIn?: boolean;
 }
 
-export interface AuthCodeDTO {
-    code: string
+export class RegistrationDTO {
+
+    @ApiProperty({ required: true })
+    email: string;
+
+    @ApiProperty({ required: true })
+    username: string;
+
+    @ApiProperty({ required: true })
+    password: string;
+
+    @ApiProperty({ required: false })
+    discordId?: string;
 }
 
-export interface RegistrationDTO {
+export class RequestRecoveryDTO {
+    @ApiProperty({ required: true })
     email: string;
-    username: string;
+}
+
+export class RecoveryDTO {
+    @ApiProperty({ required: true })
+    recoveryToken: string;
+
+    @ApiProperty({ required: true })
     password: string;
-    discordId: string;
 }
 
 export interface JwtResponseDTO {
