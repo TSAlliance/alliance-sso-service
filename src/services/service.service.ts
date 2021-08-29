@@ -64,6 +64,7 @@ export class ServiceService {
 
         service.clientId = RandomUtil.generateClientId();
         service.clientSecret = RandomUtil.generateClientSecret();
+        service.credentialHash = RandomUtil.randomCredentialHash();
 
         return this.serviceRepository.save(service);
     }

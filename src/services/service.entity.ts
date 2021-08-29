@@ -45,7 +45,7 @@ export class Service extends Account implements ServiceDTO {
     public identifier: string;
 
     constructor() {
-        super(AccountType.SERVICE)
+        super(AccountType.SERVICE, RandomUtil.randomCredentialHash())
     }
 
     public hasPermission(permission: string): boolean {

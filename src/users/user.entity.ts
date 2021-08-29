@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
 import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
 import { Service } from "../services/service.entity";
@@ -43,7 +44,7 @@ export class User extends Account implements UserDTO {
     public services: Service[]
 
     constructor(username: string, email: string, password: string) {
-        super(AccountType.USER);
+        super(AccountType.USER, RandomUtil.randomCredentialHash());
         this.username = username;
         this.email = email;
         this.password = password;

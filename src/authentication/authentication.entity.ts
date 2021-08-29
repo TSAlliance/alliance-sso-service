@@ -99,6 +99,7 @@ export interface JwtResponseDTO {
 
 export interface JwtDTO {
     id: string;
-    accountType: AccountType
+    accountType: AccountType;
+    credentialHash: string;
     exp?: number;
 }

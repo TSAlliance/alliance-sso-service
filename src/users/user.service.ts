@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { Validator } from '@tsalliance/rest';
+import { RandomUtil, Validator } from '@tsalliance/rest';
 import { PasswordService } from 'src/authentication/password.service';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
@@ -47,7 +47,7 @@ export class UserService {
 
         this.validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
         this.validator.email("email", data.email).required().unique(() => existsByEmail).check();
-        this.validator.password("password", data.password).required();
+        this.validator.password("password", data.password).required().check();
         this.validator.throwErrors();
 
         const result = await this.userRepository.save(new User(data.username, data.email, this.passwordService.encodePassword(data.password)));
@@ -55,10 +55,6 @@ export class UserService {
 
         try {
             const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());
-    
-            console.log(result);
-            console.log(avatarSvgData);
-    
             const avatarResourceInfo = await this.mediaService.setUserAvatar(result.id, avatarSvgData);
     
             result.avatarResourceUri = avatarResourceInfo.resourceUri;
@@ -86,10 +82,21 @@ export class UserService {
         }
         if(userData.password && this.validator.password("password", userData.password).check()) {
             user.password = this.passwordService.encodePassword(userData.password);
+            user.credentialHash = RandomUtil.randomCredentialHash()
         }
 
         this.validator.throwErrors();
         return this.userRepository.save(user);
+    }
+
+    public async deleteUser(userId: string) {
+        return this.userRepository.manager.transaction(async () => {
+            const user = await this.findById(userId);
+            const result = await this.userRepository.delete(user);
+
+            this.mediaService.deleteAvatar(user.avatarResourceId)
+            return result;
+        })
     }
 
     public async existsByUsername(username: string): Promise<boolean> {        

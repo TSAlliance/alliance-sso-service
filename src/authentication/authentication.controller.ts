@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ChangePasswordDTO, CredentialsDTO, JwtResponseDTO, RecoveryDTO, RegistrationDTO, RequestRecoveryDTO } from './authentication.entity';
 import { AuthService } from './authentication.service';
 
-@Controller('auth')
+@Controller('authentication')
 @ApiTags("Authentication Controller")
 export class AuthController {
 
@@ -11,7 +11,7 @@ export class AuthController {
 
     @Post("register")
     public async register(@Body() registration: RegistrationDTO): Promise<void> {
-        this.authService.register(registration)
+        return this.authService.register(registration)
     }
 
     @Post("requestRecovery")
@@ -30,15 +30,9 @@ export class AuthController {
         return this.authService.changeCredentials("123", data);
     }
 
-    @Post("authenticate")
+    @Post("login")
     public async authenticate(@Body() credentials: CredentialsDTO): Promise<JwtResponseDTO> {
         return this.authService.signInWithCredentials(credentials);
     }
-
-    /*@Post("authorize")
-    @ApiBearerAuth()
-    public async authorize(@Headers() headers: any) {        
-        return this.authService.signInWithToken(headers["authorization"]);
-    }*/
 
 }

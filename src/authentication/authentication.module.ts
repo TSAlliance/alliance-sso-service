@@ -7,10 +7,10 @@ import { UsersModule } from 'src/users/user.module';
 import { PasswordService } from './password.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecoveryTokenRepository } from './authentication.repository';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthenticationGuard } from './authentication.guard';
 
 @Module({
-  providers: [AuthService, PasswordService],
-  controllers: [AuthController],
   imports: [
     ServiceModule,
     JwtModule.register({
@@ -19,8 +19,11 @@ import { RecoveryTokenRepository } from './authentication.repository';
     UsersModule,
     TypeOrmModule.forFeature([ RecoveryTokenRepository ])
   ],
+  providers: [AuthService, PasswordService, { provide: APP_GUARD, useClass: AuthenticationGuard }],
+  controllers: [AuthController],
   exports: [
-    PasswordService
+    PasswordService,
+    AuthService
   ]
 })
 export class AuthModule {}

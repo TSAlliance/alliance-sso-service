@@ -81,11 +81,20 @@ export class AuthService {
      * @returns Account object
      */
     public async authorizeDecodedToken(token: JwtDTO): Promise<Account> {
+        let account: Account;
         if(token.accountType == AccountType.USER) {
-            return this.userService.findById(token.id)
+            account = await this.userService.findById(token.id)
         } else {
-            return this.serviceService.findById(token.id);
+            account = await this.serviceService.findById(token.id);
         }
+
+        // Check if credentials have changed, so that the jwt can get rejected
+        // and a new one must be obtained by signInWithCredentials()
+        if(token.credentialHash != account.credentialHash) {
+            throw new SessionExpiredException()
+        }
+
+        return account;
     }
 
     /**
@@ -95,7 +104,7 @@ export class AuthService {
      * @returns JwtResponseDTO object
      */
     private async issueJwt(account: Account, stayLoggedIn = false): Promise<JwtResponseDTO> {
-        const tokenDTO: JwtDTO = { id: account.id, accountType: account.accountType }
+        const tokenDTO: JwtDTO = { id: account.id, accountType: account.accountType, credentialHash: account.credentialHash }
         const expiresIn: number = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7);
         if(!stayLoggedIn) tokenDTO.exp = expiresIn;
         
@@ -111,7 +120,7 @@ export class AuthService {
      * Register user
      * @param registration Registration Data 
      */
-    public async register(registration: RegistrationDTO) {
+    public async register(registration: RegistrationDTO) {       
         await this.userService.createUser({
             email: registration.email,
             username: registration.username,

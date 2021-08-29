@@ -32,6 +32,15 @@ export class MediaService {
     }
 
     /**
+     * Delete avatar
+     * @param resourceHash Avatar to delete
+     */
+    public async deleteAvatar(resourceHash: string) {
+        const filepath = this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg";
+        unlinkSync(filepath);
+    }
+
+    /**
      * Serve an avatar by returning a streamable file for cross platform support in nest.
      * @param resourceHash Hash to identify the resource with
      * @returns StreamableFile object
