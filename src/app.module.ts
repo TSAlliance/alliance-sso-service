@@ -6,7 +6,7 @@ import { ServiceModule } from './services/service.module';
 import { RolesModule } from './roles/role.module';
 import { UsersModule } from './users/user.module';
 import { MediaModule } from './media/media.module';
-import { AuthModule } from './authentication/auth.module';
+import { AuthModule } from './authentication/authentication.module';
 
 @Module({
   imports: [

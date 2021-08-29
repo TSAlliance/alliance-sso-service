@@ -38,7 +38,17 @@ export class MediaService {
      */
     public async serveAvatar(resourceHash: string): Promise<StreamableFile> {
         const filepath = this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg";
-        if(!existsSync(filepath)) throw new NotFoundException()
+        if(!existsSync(filepath)) {
+            const svgData = await this.generateAvatar(resourceHash);
+            await this.saveOptimizedImage(filepath, svgData, "jpeg", { 
+                width: 512, 
+                height: 512, 
+                options: { 
+                    fit: "cover", 
+                    background: { r: 61, g: 69, b: 80, alpha: 1 }
+                }
+            })
+        }
 
         return new StreamableFile(createReadStream(this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg"));
     }
@@ -62,6 +72,7 @@ export class MediaService {
         user.avatarResourceId = resourceHash;
         user.avatarResourceUri = "alliance:avatars:" + userId + ":" + resourceHash;
 
+        // If changes are made here, make sure these are also done inside the serveAvatar() method!!!
         await this.saveOptimizedImage(destFilepath, data, "jpeg", { 
             width: 512, 
             height: 512, 

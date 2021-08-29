@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
+import { PasswordService } from 'src/authentication/password.service';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
 import { UserRepository } from './user.repository';
@@ -9,6 +10,7 @@ export class UserService {
 
     constructor(
         @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
+        private passwordService: PasswordService,
         private userRepository: UserRepository,
         private validator: Validator
     ){        
@@ -23,6 +25,13 @@ export class UserService {
         if(withSensitive) attributes.push("password");        
 
         return this.userRepository.findOne(userId, { select: attributes });
+    }
+
+    public async findByEmail(email: string, withSensitive = false): Promise<User> {
+        const attributes: (keyof User)[] = [ "id", "email", "username" ];
+        if(withSensitive) attributes.push("password");
+
+        return this.userRepository.findOne({ where: { email }, select: attributes });
     }
 
     public async findByEmailOrUsername(email: string, username: string, withSensitive = false): Promise<User> {
@@ -41,7 +50,7 @@ export class UserService {
         this.validator.password("password", data.password).required();
         this.validator.throwErrors();
 
-        const result = await this.userRepository.save(new User(data.username, data.email, data.password));
+        const result = await this.userRepository.save(new User(data.username, data.email, this.passwordService.encodePassword(data.password)));
         delete result.password;
 
         try {
@@ -57,7 +66,6 @@ export class UserService {
         } catch (err) {
             // Do nothing -> Silently fail
             console.log(err);
-            
         }
 
         return result;
@@ -76,14 +84,15 @@ export class UserService {
         if(userData.email && this.validator.email("email", userData.username).unique(() => existsByEmail).check()) {
             user.email = userData.email;
         }
+        if(userData.password && this.validator.password("password", userData.password).check()) {
+            user.password = this.passwordService.encodePassword(userData.password);
+        }
 
         this.validator.throwErrors();
         return this.userRepository.save(user);
     }
 
-    public async existsByUsername(username: string): Promise<boolean> {
-        console.log(await this.userRepository.exists({ where: {username}}));
-        
+    public async existsByUsername(username: string): Promise<boolean> {        
         return this.userRepository.exists({ where: {username}});
     }
 

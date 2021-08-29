@@ -1,29 +1,25 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtDTO, JwtResponseDTO, CredentialsDTO, RegistrationDTO, RequestRecoveryDTO, RecoveryDTO } from './auth.entity';
-import bcrypt from "bcrypt"
+import { JwtDTO, JwtResponseDTO, CredentialsDTO, RegistrationDTO, RequestRecoveryDTO, RecoveryDTO, AccountRecoveryToken, ChangePasswordDTO } from './authentication.entity';
 import { CredentialsMismatchException } from 'src/errors/credentialsMismatchException';
 import { SessionExpiredException } from 'src/errors/sessionExpiredException';
 import { Account, AccountType } from 'src/account/account.entity';
 import { ServiceService } from '../services/service.service';
 import { UserService } from 'src/users/user.service';
 import { User } from 'src/users/user.entity';
+import { RecoveryTokenRepository } from './authentication.repository';
+import { PasswordService } from './password.service';
+import { ValidationException } from '@tsalliance/rest';
 
 @Injectable()
 export class AuthService {
     constructor(
         private jwtService: JwtService,
         private userService: UserService,
-        private serviceService: ServiceService
+        private serviceService: ServiceService,
+        private passwordService: PasswordService,
+        private recoveryTokenRepository: RecoveryTokenRepository
     ){}
-
-    public encodePassword(password: string): string {
-        return bcrypt.hashSync(password, 10);
-    }
-
-    public comparePasswords(password: string, hashedPassword: string): boolean {
-        return bcrypt.compareSync(password, hashedPassword);
-    }
 
     public async signInWithCredentials(credentials: CredentialsDTO): Promise<JwtResponseDTO> {
         let account: Account;
@@ -32,7 +28,7 @@ export class AuthService {
             account = await this.userService.findByEmailOrUsername(credentials.identifier, credentials.identifier, true);
             if(!account) throw new NotFoundException();
 
-            if(!this.comparePasswords(credentials.password, (account as User).password)) {
+            if(!this.passwordService.comparePasswords(credentials.password, (account as User).password)) {
                 throw new CredentialsMismatchException();
             }
         } else {
@@ -111,16 +107,88 @@ export class AuthService {
         }
     }
 
+    /**
+     * Register user
+     * @param registration Registration Data 
+     */
     public async register(registration: RegistrationDTO) {
-        return
+        await this.userService.createUser({
+            email: registration.email,
+            username: registration.username,
+            password: registration.password,
+            discordId: registration.discordId
+        });
     }
 
-    public async recover(recovery: RecoveryDTO) {
-        return
-    }
-
+    /**
+     * Request account recovery for user. This will send an email to the user containing a reset link.
+     * @param recovery RecoveryDTO containing mainly the email address.
+     */
     public async requestRecovery(recovery: RequestRecoveryDTO) {
-        return
+        const user = await this.userService.findByEmail(recovery.email);
+        await this.recoveryTokenRepository.save(new AccountRecoveryToken(user));
+    }
+
+    /**
+     * Recover an user account by setting a new password and verify the request using the recovery token.
+     * @param recovery RecoveryDTO containing the token and new password.
+     */
+    public async recover(recovery: RecoveryDTO) {
+        const token: AccountRecoveryToken = await this.recoveryTokenRepository.findOneOrFail({ where: { token: recovery.token }, relations: ["user"]})
+        const user = token.user;
+
+        // Check if new password is old password
+        if(this.passwordService.comparePasswords(recovery.password, user.password)) {
+            throw new ValidationException([{ fieldname: "password", errors: [
+                    { name: "match", expected: false, found: true }
+                ]}
+            ])
+        }
+        
+        await this.recoveryTokenRepository.manager.transaction(async() => {
+            await this.updatePassword(token.user.id, recovery.password);
+            await this.recoveryTokenRepository.delete({ token: recovery.token })
+        })
+    }
+
+    /**
+     * Change password of an user account.
+     * @param userId User's id
+     * @param data Password data
+     */
+    public async changeCredentials(userId: string, data: ChangePasswordDTO) {
+        // Check if passwords aren't the same
+        if(data.currentPassword == data.newPassword) {
+            throw new ValidationException([{ fieldname: "newPassword", errors: [
+                    { name: "unique", expected: true, found: false }
+                ]}
+            ])
+        }
+
+        // Compare password to verify request
+        const user = await this.userService.findById(userId, true);
+        if(!this.passwordService.comparePasswords(data.currentPassword, user.password)) {
+            throw new ValidationException([{ fieldname: "currentPassword", errors: [
+                    { name: "match", expected: true, found: false }
+                ]}
+            ])
+        }
+
+        // Update password
+        await this.updatePassword(userId, data.newPassword)
+    }
+
+    /**
+     * Update password using userService's update method
+     * @param userId User's id
+     * @param password Updated password
+     */
+    private async updatePassword(userId: string, password: string) {
+        await this.userService.updateUser(userId, {
+            email: undefined,
+            username: undefined,
+            password
+        })
     }
 
 }

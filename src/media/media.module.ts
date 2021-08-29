@@ -4,9 +4,10 @@ import { MediaController } from './media.controller';
 import { UserService } from 'src/users/user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserRepository } from 'src/users/user.repository';
+import { PasswordService } from 'src/authentication/password.service';
 
 @Module({
-  providers: [MediaService, UserService],
+  providers: [MediaService, UserService, PasswordService],
   imports: [
     TypeOrmModule.forFeature([ UserRepository ])
   ],
