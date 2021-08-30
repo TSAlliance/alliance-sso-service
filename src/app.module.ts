@@ -7,6 +7,7 @@ import { RolesModule } from './roles/role.module';
 import { UsersModule } from './users/user.module';
 import { MediaModule } from './media/media.module';
 import { AuthModule } from './authentication/authentication.module';
+import { InviteModule } from './invite/invite.module';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { AuthModule } from './authentication/authentication.module';
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000
-    }), 
+    }), InviteModule, 
   ],
   controllers: [],
 })
