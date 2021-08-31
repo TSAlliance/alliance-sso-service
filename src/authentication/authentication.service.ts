@@ -68,7 +68,7 @@ export class AuthService {
      * @returns String containing the extracted jwt.
      */
     private processAuthorizationValue(authorizationHeaderValue: string): string {
-        if(!authorizationHeaderValue.toLowerCase().startsWith("bearer")) {
+        if(!authorizationHeaderValue?.toLowerCase().startsWith("bearer")) {
             throw new BadRequestException();
         }
 
