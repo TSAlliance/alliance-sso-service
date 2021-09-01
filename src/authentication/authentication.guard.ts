@@ -19,16 +19,25 @@ export class AuthenticationGuard implements CanActivate {
         const headers = context.switchToHttp().getRequest().headers;
         const authHeaderValue = headers["authorization"]
 
-        if(!!requiredPermission && !authHeaderValue) {
-          throw new UnauthorizedException()
-        }        
+        // Check if some permission is required to access route
+        if(requiredPermission) {
 
-        const account: Account = await this.authService.signInWithToken(authHeaderValue);
-        if(account.hasPermission(requiredPermission)) {
-          throw new ForbiddenException()
-        }
-        
-        resolve(true)
+          // If no header exists -> throw unauthorized
+          if(!authHeaderValue) {
+            throw new UnauthorizedException()
+          } else {
+
+            // If header exists -> proceed with authentication and authorization
+            const account: Account = await this.authService.signInWithToken(authHeaderValue);
+            if(account.hasPermission(requiredPermission)) {
+              throw new ForbiddenException()
+            }
+            
+            resolve(true)
+          }
+        } else {
+          resolve(true)
+        }  
       } catch (err) {
         reject(err)
       }
