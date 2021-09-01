@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validator } from '@tsalliance/rest';
+import { RandomUtil, Validation, Validator } from '@tsalliance/rest';
 import { PasswordService } from 'src/authentication/password.service';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
@@ -12,7 +12,6 @@ export class UserService {
         @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
         private passwordService: PasswordService,
         private userRepository: UserRepository,
-        private validator: Validator
     ){        
     }
 
@@ -41,14 +40,14 @@ export class UserService {
         return this.userRepository.createQueryBuilder().where(`username = :username OR email = :email`, { username, email }).getOne();
     }
 
-    public async createUser(data: UserDTO): Promise<User> {
+    public async createUser(data: UserDTO, @Validation() validator?: Validator): Promise<User> {
         const existsByUsername = await this.existsByUsername(data.username);
         const existsByEmail = await this.existsByEmail(data.email);
 
-        this.validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
-        this.validator.email("email", data.email).required().unique(() => existsByEmail).check();
-        this.validator.password("password", data.password).required().check();
-        this.validator.throwErrors();
+        validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
+        validator.email("email", data.email).required().unique(() => existsByEmail).check();
+        validator.password("password", data.password).required().check();
+        validator.throwErrors();
 
         const result = await this.userRepository.save(new User(data.username, data.email, this.passwordService.encodePassword(data.password)));
         delete result.password;
@@ -67,25 +66,25 @@ export class UserService {
         return result;
     }
 
-    public async updateUser(userId: string, userData: UserDTO): Promise<User> {
+    public async updateUser(userId: string, userData: UserDTO, @Validation() validator?: Validator): Promise<User> {
         const user: User = await this.findById(userId);
         if(!user) throw new NotFoundException();
 
         const existsByUsername = await this.existsByUsername(userData.username);
         const existsByEmail = await this.existsByEmail(userData.email);
 
-        if(userData.username && this.validator.text("username", userData.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByUsername).check()) {
+        if(userData.username && validator.text("username", userData.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByUsername).check()) {
             user.username = userData.username;
         }
-        if(userData.email && this.validator.email("email", userData.username).unique(() => existsByEmail).check()) {
+        if(userData.email && validator.email("email", userData.username).unique(() => existsByEmail).check()) {
             user.email = userData.email;
         }
-        if(userData.password && this.validator.password("password", userData.password).check()) {
+        if(userData.password && validator.password("password", userData.password).check()) {
             user.password = this.passwordService.encodePassword(userData.password);
             user.credentialHash = RandomUtil.randomCredentialHash()
         }
 
-        this.validator.throwErrors();
+        validator.throwErrors();
         return this.userRepository.save(user);
     }
 

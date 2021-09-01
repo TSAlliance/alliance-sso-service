@@ -21,7 +21,6 @@ export class AuthenticationGuard implements CanActivate {
 
         // Check if some permission is required to access route
         if(requiredPermission) {
-
           // If no header exists -> throw unauthorized
           if(!authHeaderValue) {
             throw new UnauthorizedException()
