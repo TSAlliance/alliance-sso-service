@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Role } from "src/roles/role.entity";
+import { User } from "src/users/user.entity";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export class InviteDTO {
     @ApiProperty({ required: false })
@@ -27,6 +29,12 @@ export class Invite implements InviteDTO {
 
     @Column({ nullable: true })
     public expiresAt?: Date;
+
+    @ManyToOne(() => User, { onDelete: "CASCADE" })
+    public inviter: User;
+
+    @ManyToOne(() => Role, { nullable: true, onDelete: "CASCADE" })
+    public asignRole: Role;
 
     @BeforeInsert()
     public populateCode() {

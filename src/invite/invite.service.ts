@@ -10,7 +10,6 @@ export class InviteService {
 
     constructor(
         private inviteRepository: InviteRepository,
-        private validator: Validator
     ){}
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Invite>): Promise<Page<Invite>> {
@@ -22,11 +21,12 @@ export class InviteService {
     }
 
     public async createInvite(data: InviteDTO): Promise<Invite> {
+        const validator = new Validator();
         const invite = new Invite();
 
-        console.log(this.validator.date("expiresAt", data.expiresAt.toString()).check())
+        console.log(validator.date("expiresAt", data.expiresAt.toString()).check())
 
-        if(data.maxUses && this.validator.number("maxUses", data.maxUses).min(1).max(120).check()) {
+        if(data.maxUses && validator.number("maxUses", data.maxUses).min(1).max(120).check()) {
             invite.maxUses = data.maxUses;
         }
         
@@ -40,7 +40,8 @@ export class InviteService {
 
         role.title = data.title;
         if(data.permissions) role.permissions = data.permissions;*/
-        return this.inviteRepository.save(invite);
+        const result = await this.inviteRepository.save(invite);
+        return result;
     }
 
     public async deleteInvite(id: string): Promise<DeleteResult> {

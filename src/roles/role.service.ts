@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Validator } from '@tsalliance/rest';
+import { Validation, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Permission } from './permission.entity';
@@ -8,10 +8,7 @@ import { RoleRepository } from './role.repository';
 
 @Injectable()
 export class RoleService {
-    constructor(
-        private roleRepository: RoleRepository,
-        private validator: Validator
-    ){}
+    constructor(private roleRepository: RoleRepository,){}
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Role>): Promise<Page<Role>> {
         return this.roleRepository.findAll(pageable, options);
@@ -21,33 +18,33 @@ export class RoleService {
         return this.roleRepository.findOne({ id: roleId })
     }
 
-    public async createRole(data: RoleDTO): Promise<Role> {
+    public async createRole(data: RoleDTO, @Validation() validator?: Validator): Promise<Role> {
         const role = new Role();
 
-        this.validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().check();
-        if(data.description && this.validator.text("description", data.description).alphaNum().minLen(3).maxLen(120).check()) {
+        validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().check();
+        if(data.description && validator.text("description", data.description).alphaNum().minLen(3).maxLen(120).check()) {
             role.description = data.description;
         }
         
-        this.validator.throwErrors();
+        validator.throwErrors();
 
         role.title = data.title;
         if(data.permissions) role.permissions = data.permissions;
         return this.roleRepository.save(role);
     }
 
-    public async updateRole(roleId: string, data: RoleDTO): Promise<Role> {
+    public async updateRole(roleId: string, data: RoleDTO, @Validation() validator?: Validator): Promise<Role> {
         const role: Role = await this.findById(roleId);        
         if(!role) throw new NotFoundException();
 
-        if(data.title && this.validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
+        if(data.title && validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
             role.title = data.title;
         }
-        if(data.description && this.validator.text("description", data.description).alphaNum().minLen(3).maxLen(120).check()) {
+        if(data.description && validator.text("description", data.description).alphaNum().minLen(3).maxLen(120).check()) {
             role.description = data.description;
         }
 
-        this.validator.throwErrors();
+        validator.throwErrors();
         
         if(data.permissions) role.permissions = data.permissions;
         return this.roleRepository.save(role);
