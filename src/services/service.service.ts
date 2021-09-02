@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validation, Validator } from '@tsalliance/rest';
+import { RandomUtil, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
@@ -22,7 +22,8 @@ export class ServiceService {
         return this.serviceRepository.findOneOrFail({ where: { clientId, clientSecret } })
     }
 
-    public async createService(data: ServiceDTO, @Validation() validator?: Validator): Promise<Service> {       
+    public async createService(data: ServiceDTO): Promise<Service> {    
+        const validator = new Validator();   
         const service = new Service();
 
         validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().check();
@@ -37,7 +38,8 @@ export class ServiceService {
         return this.serviceRepository.save(service);
     }
 
-    public async updateService(id: string, data: ServiceDTO, @Validation() validator?: Validator): Promise<Service> {
+    public async updateService(id: string, data: ServiceDTO): Promise<Service> {
+        const validator = new Validator();
         const service: Service = await this.findById(id);        
         if(!service) throw new NotFoundException();
 

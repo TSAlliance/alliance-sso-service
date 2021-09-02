@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
-import { Column, Entity, JoinTable, ManyToMany } from "typeorm";
+import { Role } from "src/roles/role.entity";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 import { Service } from "../services/service.entity";
 
 export class UserDTO {
@@ -38,6 +39,10 @@ export class User extends Account implements UserDTO {
 
     @Column({ nullable: true })
     public avatarResourceId: string;
+
+    @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL" })
+    @JoinColumn()
+    public role?: Role;
 
     @ManyToMany(() => Service, { cascade: true })
     @JoinTable()

@@ -22,14 +22,14 @@ export class Permission implements PermissionDTO {
     @Column({ nullable: false })
     public title: string;
 
-    @Column()
+    @Column({ nullable: true })
     public description?: string;
 
     @ManyToOne(() => Service, { nullable: true, onDelete: "CASCADE" })
     @JoinColumn()
     public service?: Service;
 
-    @Column()
+    @Column({ nullable: false, unique: true })
     public readonly permissionValue: string;
 
     /**

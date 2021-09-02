@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validation, Validator } from '@tsalliance/rest';
+import { RandomUtil, Validator } from '@tsalliance/rest';
 import { PasswordService } from 'src/authentication/password.service';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
@@ -40,7 +40,8 @@ export class UserService {
         return this.userRepository.createQueryBuilder().where(`username = :username OR email = :email`, { username, email }).getOne();
     }
 
-    public async createUser(data: UserDTO, @Validation() validator?: Validator): Promise<User> {
+    public async createUser(data: UserDTO): Promise<User> {
+        const validator = new Validator();
         const existsByUsername = await this.existsByUsername(data.username);
         const existsByEmail = await this.existsByEmail(data.email);
 
@@ -66,10 +67,11 @@ export class UserService {
         return result;
     }
 
-    public async updateUser(userId: string, userData: UserDTO, @Validation() validator?: Validator): Promise<User> {
+    public async updateUser(userId: string, userData: UserDTO): Promise<User> {
         const user: User = await this.findById(userId);
         if(!user) throw new NotFoundException();
 
+        const validator = new Validator();
         const existsByUsername = await this.existsByUsername(userData.username);
         const existsByEmail = await this.existsByEmail(userData.email);
 
@@ -99,11 +101,11 @@ export class UserService {
     }
 
     public async existsByUsername(username: string): Promise<boolean> {        
-        return this.userRepository.exists({ where: {username}});
+        return this.userRepository.exists({ username });
     }
 
     public async existsByEmail(email: string): Promise<boolean> {
-        return this.userRepository.exists({ where: {email}});
+        return this.userRepository.exists({ email });
     }
 
 }
