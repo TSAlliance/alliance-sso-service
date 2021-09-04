@@ -10,6 +10,9 @@ import { User } from 'src/users/user.entity';
 import { RecoveryTokenRepository } from './authentication.repository';
 import { PasswordService } from './password.service';
 import { ValidationException } from '@tsalliance/rest';
+import { InviteService } from 'src/invite/invite.service';
+import { Service } from 'src/services/service.entity';
+import { Invite } from 'src/invite/invite.entity';
 
 @Injectable()
 export class AuthService {
@@ -18,19 +21,24 @@ export class AuthService {
         private userService: UserService,
         private serviceService: ServiceService,
         private passwordService: PasswordService,
-        private recoveryTokenRepository: RecoveryTokenRepository
+        private recoveryTokenRepository: RecoveryTokenRepository,
+        private inviteService: InviteService
     ){}
 
     public async signInWithCredentials(credentials: CredentialsDTO): Promise<JwtResponseDTO> {
-        let account: Account;
+        let account: Service | User;
         if(credentials.accountType == AccountType.USER) {
             // Login as user
             account = await this.userService.findByEmailOrUsername(credentials.identifier, credentials.identifier, true);
+            console.log(account)
             if(!account) throw new NotFoundException();
 
             if(!this.passwordService.comparePasswords(credentials.password, (account as User).password)) {
                 throw new CredentialsMismatchException();
             }
+
+            console.log((account as User).role)
+            account = (account as User).censored();
         } else {
             // Login as service
             credentials.stayLoggedIn = true
@@ -51,7 +59,7 @@ export class AuthService {
      * @param token JWT encoded as string.
      * @returns Account object
      */
-    public async signInWithToken(authorizationHeaderValue: string): Promise<Account> {
+    public async signInWithToken(authorizationHeaderValue: string): Promise<Service | User> {
         const token = this.processAuthorizationValue(authorizationHeaderValue);
         const decoded: JwtDTO = this.jwtService.decode(token) as JwtDTO;
         
@@ -80,8 +88,8 @@ export class AuthService {
      * @param token Decoded jwt object
      * @returns Account object
      */
-    public async authorizeDecodedToken(token: JwtDTO): Promise<Account> {
-        let account: Account;
+    public async authorizeDecodedToken(token: JwtDTO): Promise<Service | User> {
+        let account: Service | User;
         if(token.accountType == AccountType.USER) {
             account = await this.userService.findById(token.id)
         } else {
@@ -103,8 +111,8 @@ export class AuthService {
      * @param stayLoggedIn Specifiy if the jwt should expire after 7 days or not. If true, the token never expires.
      * @returns JwtResponseDTO object
      */
-    private async issueJwt(account: Account, stayLoggedIn = false): Promise<JwtResponseDTO> {
-        const tokenDTO: JwtDTO = { id: account.id, accountType: account.accountType, credentialHash: account.credentialHash }
+    private async issueJwt(account: Service | User, stayLoggedIn = false): Promise<JwtResponseDTO> {
+        const tokenDTO: JwtDTO = { id: account.id, accountType: (account instanceof User ? AccountType.USER : AccountType.SERVICE), credentialHash: account.credentialHash }
         const expiresIn: number = Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7);
         if(!stayLoggedIn) tokenDTO.exp = expiresIn;
         
@@ -120,13 +128,24 @@ export class AuthService {
      * Register user
      * @param registration Registration Data 
      */
-    public async register(registration: RegistrationDTO) {       
+    public async register(registration: RegistrationDTO) {   
+        const invite = await this.inviteService.findById(registration.inviteCode);
+        if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException();
+
         await this.userService.createUser({
             email: registration.email,
             username: registration.username,
             password: registration.password,
-            discordId: registration.discordId
+            discordId: registration.discordId,
+            role: invite.asignRole
         });
+
+        invite.uses++;
+        if(!this.inviteService.isInviteValid(invite)) {
+            await this.inviteService.deleteInvite(invite.id)
+        } else {
+            await this.inviteService.save(invite);
+        }
     }
 
     /**
@@ -173,6 +192,8 @@ export class AuthService {
                 ]}
             ])
         }
+
+        // TODO: @Authentication() Decorator to inject auth object when calling the route
 
         // Compare password to verify request
         const user = await this.userService.findById(userId, true);

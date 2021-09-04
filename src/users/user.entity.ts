@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
+import { Permission } from "src/roles/permission.entity";
 import { Role } from "src/roles/role.entity";
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 import { Service } from "../services/service.entity";
@@ -17,9 +18,17 @@ export class UserDTO {
 
     @ApiProperty({ required: false })
     discordId?: string;
+
+    @ApiProperty({ required: false, isArray: true, default: [] })
+    allowedServices?: Service[]
+
+    @ApiProperty({ required: false })
+    role?: Role;
 }
 
-@Entity()
+@Entity({
+    
+})
 export class User extends Account implements UserDTO {
     
     @Column({ length: 32, nullable: false, unique: true })
@@ -40,29 +49,40 @@ export class User extends Account implements UserDTO {
     @Column({ nullable: true })
     public avatarResourceId: string;
 
-    @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL" })
+    @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL", eager: true })
     @JoinColumn()
     public role?: Role;
 
-    @ManyToMany(() => Service, { cascade: true })
-    @JoinTable()
-    public services: Service[]
+    @ManyToMany(() => Service)
+    @JoinTable({ name: "user_services" })
+    public allowedServices: Service[]
 
-    constructor(username: string, email: string, password: string) {
+    constructor() {
         super(AccountType.USER, RandomUtil.randomCredentialHash());
-        this.username = username;
-        this.email = email;
-        this.password = password;
     }
 
     public hasPermission(permission: string): boolean {
-        // TODO
+        if(this.role) {
+            if(this.role.id == "*") return true;
+            else return this.role.permissions.map((value) => value.id).includes(Permission.formatPermission(permission))
+        }
         return false;
     }
 
     public canAccessService(serviceId: string): boolean {
-        return false;
-        //return (!!this.allowedServices?.find((service: Service) => service.id === serviceId))
+        if(this.role && this.role.id == "*") {
+            return true;
+        }
+
+        return (!!this.allowedServices?.find((service: Service) => service.id === serviceId))
+    }
+
+    public censored(): User {
+        const user = { ...this }
+        user.password = undefined;
+        user.credentialHash = undefined;
+        
+        return user;
     }
 
 }

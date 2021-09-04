@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RecoveryTokenRepository } from './authentication.repository';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './authentication.guard';
+import { InviteModule } from 'src/invite/invite.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthenticationGuard } from './authentication.guard';
       secret: "TODO_secret"
     }),
     UsersModule,
+    InviteModule,
     TypeOrmModule.forFeature([ RecoveryTokenRepository ])
   ],
   providers: [AuthService, PasswordService, { provide: APP_GUARD, useClass: AuthenticationGuard }],

@@ -43,6 +43,9 @@ export class RegistrationDTO {
 
     @ApiProperty({ required: false })
     discordId?: string;
+
+    @ApiProperty({ required: true })
+    inviteCode: string;
 }
 
 export class RequestRecoveryDTO {
@@ -66,7 +69,7 @@ export class ChangePasswordDTO {
     newPassword: string;
 }
 
-@Entity()
+@Entity({ name: "account_recovery" })
 export class AccountRecoveryToken {
 
     @PrimaryGeneratedColumn("uuid")

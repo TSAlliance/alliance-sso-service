@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Role } from "src/roles/role.entity";
 import { User } from "src/users/user.entity";
-import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 export class InviteDTO {
     @ApiProperty({ required: false })
@@ -10,19 +10,22 @@ export class InviteDTO {
 
     @ApiProperty({ required: false, default: 0 })
     maxUses?: number;
+
+    @ApiProperty({ required: false })
+    asignRole?: Role
 }
 
 @Entity()
 export class Invite implements InviteDTO {
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryColumn("varchar", { length: 6 })
     public id: string;
 
     @Column({ nullable: false, default: 0 })
     public maxUses: number;
 
-    @Column({ nullable: false, length: 6 })
-    public code: string;
+    @Column({ nullable: false, default: 0 })
+    public uses: number;
 
     @CreateDateColumn()
     public createdAt: Date;
@@ -34,11 +37,11 @@ export class Invite implements InviteDTO {
     public inviter: User;
 
     @ManyToOne(() => Role, { nullable: true, onDelete: "CASCADE" })
-    public asignRole: Role;
+    public asignRole?: Role;
 
     @BeforeInsert()
     public populateCode() {
-        this.code = RandomUtil.randomString(6);
+        this.id = RandomUtil.randomString(6).toUpperCase();
     }
 
 }

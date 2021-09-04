@@ -1,5 +1,6 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RandomUtil, Validator } from '@tsalliance/rest';
+import { Page, Pageable } from 'nestjs-pager';
 import { PasswordService } from 'src/authentication/password.service';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
@@ -11,33 +12,41 @@ export class UserService {
     constructor(
         @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
         private passwordService: PasswordService,
-        private userRepository: UserRepository,
-    ){        
-    }
+        private userRepository: UserRepository
+    ){}
 
     public async save(user: User): Promise<User> {
         return this.userRepository.save(user);
     }
 
-    public async findById(userId: string, withSensitive = false): Promise<User> {
-        const attributes: (keyof User)[] = [ "id", "email", "username" ];
-        if(withSensitive) attributes.push("password");        
+    public async findAll(pageable: Pageable): Promise<Page<User>> {
+        const result = await this.userRepository.findAll(pageable);
+        result?.elements.map((value) => value.censored())
+        return result;
+    }
 
-        return this.userRepository.findOne(userId, { select: attributes });
+    public async findById(userId: string, withSensitive = false): Promise<User> {
+        const result = await this.userRepository.findOne({ where: { id: userId }});
+        if(!withSensitive) {
+            return result?.censored();
+        }
+        return result;
     }
 
     public async findByEmail(email: string, withSensitive = false): Promise<User> {
-        const attributes: (keyof User)[] = [ "id", "email", "username" ];
-        if(withSensitive) attributes.push("password");
-
-        return this.userRepository.findOne({ where: { email }, select: attributes });
+        const result = await this.userRepository.findOne({ where: { email }});
+        if(!withSensitive) {
+            return result?.censored();
+        }
+        return result;
     }
 
     public async findByEmailOrUsername(email: string, username: string, withSensitive = false): Promise<User> {
-        const attributes: (keyof User)[] = [ "id", "email", "username" ];
-        if(withSensitive) attributes.push("password");
-
-        return this.userRepository.createQueryBuilder().where(`username = :username OR email = :email`, { username, email }).getOne();
+        const result = await this.userRepository.findOne({ where: [{ username },{ email }]})
+        if(!withSensitive) {
+            return result?.censored();
+        }
+        return result;
     }
 
     public async createUser(data: UserDTO): Promise<User> {
@@ -50,8 +59,13 @@ export class UserService {
         validator.password("password", data.password).required().check();
         validator.throwErrors();
 
-        const result = await this.userRepository.save(new User(data.username, data.email, this.passwordService.encodePassword(data.password)));
-        delete result.password;
+        const user = new User();
+        user.username = data.username;
+        user.email = data.email;
+        user.password = this.passwordService.encodePassword(data.password);
+        user.discordId = data.discordId;
+        user.allowedServices = data.allowedServices;
+        const result = await (await this.userRepository.save(user)).censored();
 
         try {
             const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());

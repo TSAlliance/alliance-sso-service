@@ -28,10 +28,14 @@ export class AuthenticationGuard implements CanActivate {
 
             // If header exists -> proceed with authentication and authorization
             const account: Account = await this.authService.signInWithToken(authHeaderValue);
+
+            console.log(account)
+
             if(account.hasPermission(requiredPermission)) {
               throw new ForbiddenException()
             }
             
+            context.switchToHttp().getRequest().account = account;
             resolve(true)
           }
         } else {

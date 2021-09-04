@@ -23,7 +23,7 @@ export class InviteController {
     @ApiBasicAuth()
     @Permission("invite.read")
     public async findAll(@Pageable() pageable: Pageable): Promise<Page<Invite>> {
-        return this.inviteService.findAll(pageable, { select: [ "code", "id" ] })
+        return this.inviteService.findAll(pageable, { relations: ["role", "user"] })
     }
 
     @Get(":inviteId")

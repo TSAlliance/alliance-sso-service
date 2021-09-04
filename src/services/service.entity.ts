@@ -1,7 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
-import { BeforeInsert, Column, Entity } from "typeorm";
+import { Permission } from "src/roles/permission.entity";
+import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany } from "typeorm";
 
 export class ServiceDTO {
     @ApiProperty()
@@ -43,6 +44,10 @@ export class Service extends Account implements ServiceDTO {
 
     @Column({ unique: true, nullable: false, update: false })
     public identifier: string;
+
+    @ManyToMany(() => Permission)
+    @JoinTable({ name: "service_permissions_registry" })
+    public permissionCatalog: Permission[]
 
     constructor() {
         super(AccountType.SERVICE, RandomUtil.randomCredentialHash())

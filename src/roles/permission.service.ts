@@ -26,10 +26,6 @@ export class PermissionService {
         })
     }
 
-    public async findRelatedService(permission: string): Promise<Service> {
-        return (await this.permissionRepository.findOne({ where: { permissionValue: permission }}))?.service
-    }
-
     public async getCategorizedByServices(pageable: Pageable): Promise<Page<Service>> {
         return this.serviceService.findAll(pageable, { relations: ["permission"] })
     }
@@ -44,14 +40,30 @@ export class PermissionService {
         })
     }
 
+    public async findByValue(value: string): Promise<Permission> {
+        return this.permissionRepository.findOne({ where: { id: value }})
+    }
+
     public async registerPermissionsForService(serviceId: string, data: PermissionDTO[]): Promise<Permission[]> {
         const service: Service = await this.serviceService.findById(serviceId);
         if(!service) throw new NotFoundException(); 
 
         return this.permissionRepository.save(data.map((value) => {
-            const p = new Permission(value.title, value.permissionValue, service);
-            p.description = value.description
+            const p = new Permission(value.id, value.title);
             return p;
         }));
+    }
+
+    public async findRootPermission(): Promise<Permission> {
+        return this.findByValue(Permission.formatPermission("*"))
+    }
+
+    public async findOrCreateRootPermission(): Promise<Permission> {
+        const permission = await this.findRootPermission();
+        if(!permission) {
+            return this.permissionRepository.save(new Permission("*", "Administrator"))
+        }
+
+        return permission;
     }
 }

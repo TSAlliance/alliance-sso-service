@@ -25,8 +25,8 @@ export class Role implements RoleDTO {
     @Column({ length: 120, nullable: true })
     public description?: string;
 
-    @ManyToMany(() => Permission, { eager: true, cascade: true })
-    @JoinTable()
+    @ManyToMany(() => Permission, { eager: true })
+    @JoinTable({ name: "role_permissions" })
     public permissions: Permission[]
 
 }

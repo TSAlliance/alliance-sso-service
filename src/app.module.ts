@@ -8,6 +8,7 @@ import { UsersModule } from './users/user.module';
 import { MediaModule } from './media/media.module';
 import { AuthModule } from './authentication/authentication.module';
 import { InviteModule } from './invite/invite.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { InviteModule } from './invite/invite.module';
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000
-    }), InviteModule, 
+    }), InviteModule, ProfileModule, 
   ],
   controllers: [],
 })

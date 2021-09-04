@@ -1,18 +1,15 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Permission } from './permission.entity';
+import { PermissionService } from './permission.service';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
 
 @Injectable()
-export class RoleService implements OnModuleInit {
-    constructor(private roleRepository: RoleRepository){}
-    
-    onModuleInit() {
-        this.init();
-    }
+export class RoleService {
+    constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){}
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Role>): Promise<Page<Role>> {
         return this.roleRepository.findAll(pageable, options);
@@ -20,6 +17,26 @@ export class RoleService implements OnModuleInit {
 
     public async findById(roleId: string): Promise<Role> {
         return this.roleRepository.findOne({ id: roleId })
+    }
+
+    public async findRootRole(): Promise<Role> {
+        return this.findById("*");
+    }
+
+    public async findOrCreateRootRole(): Promise<Role> {
+        let role = await this.findRootRole();
+
+        if(!role) {
+            role = new Role();
+            role.id = "*"
+            role.title = "root"
+            role.description = "Super admin role that has every possible permission.";
+            role.permissions = [ await this.permissionService.findOrCreateRootPermission() ]
+
+            role = await this.roleRepository.save(role)
+        }
+
+        return role;
     }
 
     public async createRole(data: RoleDTO): Promise<Role> {
@@ -59,17 +76,5 @@ export class RoleService implements OnModuleInit {
 
     public async deleteRole(id: string): Promise<DeleteResult> {
         return this.roleRepository.delete({ id });
-    }
-
-    public async init() {        
-        if(!(await this.findById("*"))) {
-            const role = new Role();
-            role.id = "*"
-            role.title = "root"
-            role.description = "Super admin role that has every possible permission.";
-            role.permissions = [ new Permission("Administrator", "*") ]
-
-            return this.roleRepository.save(role)
-        }
     }
 }
