@@ -47,7 +47,7 @@ export class AuthService {
             const clientId = credentials.identifier;
             const clientSecret = credentials.password;
 
-            account = await this.serviceService.findByCredentials(clientId, clientSecret);
+            account = (await this.serviceService.findByCredentials(clientId, clientSecret)) as Service;
             if(!account) throw new NotFoundException();
         }
 

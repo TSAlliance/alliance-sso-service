@@ -14,31 +14,35 @@ export class RolesController {
 
     @Get()
     @ApiBearerAuth()
-    @Permission("def")
+    @Permission("roles.read")
     public async listAll(@Pageable() pageable: Pageable) {
         return this.roleService.findAll(pageable)
     }
 
     @Get(":roleId")
     @ApiBearerAuth()
+    @Permission("roles.read")
     public async getById(@Param("roleId") roleId: string) {
         return this.roleService.findById(roleId)
     }
 
     @Post()
     @ApiBearerAuth()
+    @Permission("roles.write")
     public async createRole(@Body() role: RoleDTO) {
         return this.roleService.createRole(role);
     }
 
     @Put(":roleId")
     @ApiBearerAuth()
+    @Permission("roles.write")
     public async updateRole(@Param("roleId") roleId: string, @Body() role: RoleDTO) {
         return this.roleService.updateRole(roleId, role);
     }
 
     @Delete(":roleId")
     @ApiBearerAuth()
+    @Permission("roles.write")
     public async deleteRole(@Param("roleId") roleId: string) {
         return this.roleService.deleteRole(roleId);
     }
