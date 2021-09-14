@@ -1,7 +1,7 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Scope, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { InsufficientPermissionException } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
-import { Account } from 'src/account/account.entity';
 import { PERMISSION_KEY } from 'src/roles/permission.decorator';
 import { AuthService } from './authentication.service';
 
@@ -27,15 +27,15 @@ export class AuthenticationGuard implements CanActivate {
           } else {
 
             // If header exists -> proceed with authentication and authorization
-            const account: Account = await this.authService.signInWithToken(authHeaderValue);
-
-            console.log(account)
-
-            if(account.hasPermission(requiredPermission)) {
-              throw new ForbiddenException()
+            const account = await this.authService.signInWithToken(authHeaderValue);
+            if(!account.hasPermission(requiredPermission)) {
+              throw new InsufficientPermissionException();
             }
             
-            context.switchToHttp().getRequest().account = account;
+            // Make authentication object available to future actions in the handler chain
+            // The @Authentication param decorator as an example uses this to return the authentication
+            // object.
+            context.switchToHttp().getRequest().authentication = account;
             resolve(true)
           }
         } else {

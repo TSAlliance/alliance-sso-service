@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
 import { DeleteResult, FindManyOptions } from 'typeorm';
-import { Permission } from './permission.entity';
 import { PermissionService } from './permission.service';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
@@ -11,12 +11,30 @@ import { RoleRepository } from './role.repository';
 export class RoleService {
     constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){}
 
-    public async findAll(pageable: Pageable, options?: FindManyOptions<Role>): Promise<Page<Role>> {
-        return this.roleRepository.findAll(pageable, options);
+    public async findAll(pageable: Pageable, options: FindManyOptions<Role> = {}, authentication?: Account): Promise<Page<Role>> {
+        if(!options) options = {}
+
+        const result = await this.roleRepository.findAll(pageable, options)
+        result.elements.map((role) => {
+            if(!authentication?.hasPermission("roles.read")) {
+                return role?.restricted()
+            } else {
+                return role;
+            }
+        })
+        return result
     }
 
-    public async findById(roleId: string): Promise<Role> {
-        return this.roleRepository.findOne({ id: roleId })
+    public async findById(roleId: string, options: FindManyOptions<Role> = {}, authentication?: Account): Promise<Role> {
+        if(!options) options = {}
+
+        options.where = { id: roleId }
+        const result = await this.roleRepository.findOne(options)
+        if(!authentication?.hasPermission("roles.read")) {
+            return result?.restricted()
+        }
+
+        return result;
     }
 
     public async findRootRole(): Promise<Role> {

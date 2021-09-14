@@ -15,7 +15,7 @@ export class ServiceService {
     }
 
     public async findById(serviceId: string): Promise<Service> {
-        return this.serviceRepository.findOneOrFail({ where: { id: serviceId } })
+        return Object.assign(new Service(), await this.serviceRepository.findOneOrFail({ where: { id: serviceId } }))
     }
 
     public async findByCredentials(clientId: string, clientSecret: string): Promise<Service> {

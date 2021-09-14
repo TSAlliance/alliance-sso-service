@@ -30,7 +30,7 @@ export class AuthController {
         return this.authService.changeCredentials("123", data);
     }
 
-    @Post("login")
+    @Post("authenticate")
     public async authenticate(@Body() credentials: CredentialsDTO): Promise<JwtResponseDTO> {
         return this.authService.signInWithCredentials(credentials);
     }

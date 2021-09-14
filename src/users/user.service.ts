@@ -26,11 +26,12 @@ export class UserService {
     }
 
     public async findById(userId: string, withSensitive = false): Promise<User> {
-        const result = await this.userRepository.findOne({ where: { id: userId }});
+        const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role"]});
         if(!withSensitive) {
             return result?.censored();
         }
-        return result;
+        
+        return Object.assign(new User(), result);
     }
 
     public async findByEmail(email: string, withSensitive = false): Promise<User> {
@@ -65,6 +66,7 @@ export class UserService {
         user.password = this.passwordService.encodePassword(data.password);
         user.discordId = data.discordId;
         user.allowedServices = data.allowedServices;
+        user.role = data.role
         const result = await (await this.userRepository.save(user)).censored();
 
         try {
@@ -81,24 +83,27 @@ export class UserService {
         return result;
     }
 
-    public async updateUser(userId: string, userData: UserDTO): Promise<User> {
+    public async updateUser(userId: string, data: UserDTO): Promise<User> {
         const user: User = await this.findById(userId);
         if(!user) throw new NotFoundException();
 
         const validator = new Validator();
-        const existsByUsername = await this.existsByUsername(userData.username);
-        const existsByEmail = await this.existsByEmail(userData.email);
+        const existsByUsername = await this.existsByUsername(data.username);
+        const existsByEmail = await this.existsByEmail(data.email);
 
-        if(userData.username && validator.text("username", userData.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByUsername).check()) {
-            user.username = userData.username;
+        if(validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).unique(() => existsByUsername).check()) {
+            user.username = data.username;
         }
-        if(userData.email && validator.email("email", userData.username).unique(() => existsByEmail).check()) {
-            user.email = userData.email;
+        if(validator.email("email", data.username).unique(() => existsByEmail).check()) {
+            user.email = data.email;
         }
-        if(userData.password && validator.password("password", userData.password).check()) {
-            user.password = this.passwordService.encodePassword(userData.password);
+        if(data.password && validator.password("password", data.password).check()) {
+            user.password = this.passwordService.encodePassword(data.password);
             user.credentialHash = RandomUtil.randomCredentialHash()
         }
+
+        if(data.role) user.role = data.role
+        if(data.discordId) user.discordId = data.discordId;
 
         validator.throwErrors();
         return this.userRepository.save(user);

@@ -29,7 +29,7 @@ export class UserDTO {
 @Entity({
     
 })
-export class User extends Account implements UserDTO {
+export class User extends Account {
     
     @Column({ length: 32, nullable: false, unique: true })
     public username: string;
@@ -51,7 +51,7 @@ export class User extends Account implements UserDTO {
 
     @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL", eager: true })
     @JoinColumn()
-    public role?: Role;
+    public role: Role;
 
     @ManyToMany(() => Service)
     @JoinTable({ name: "user_services" })
@@ -62,19 +62,12 @@ export class User extends Account implements UserDTO {
     }
 
     public hasPermission(permission: string): boolean {
+
         if(this.role) {
             if(this.role.id == "*") return true;
             else return this.role.permissions.map((value) => value.id).includes(Permission.formatPermission(permission))
         }
         return false;
-    }
-
-    public canAccessService(serviceId: string): boolean {
-        if(this.role && this.role.id == "*") {
-            return true;
-        }
-
-        return (!!this.allowedServices?.find((service: Service) => service.id === serviceId))
     }
 
     public censored(): User {

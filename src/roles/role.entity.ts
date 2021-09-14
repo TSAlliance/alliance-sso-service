@@ -14,7 +14,7 @@ export class RoleDTO {
 }
 
 @Entity()
-export class Role implements RoleDTO {
+export class Role {
 
     @PrimaryGeneratedColumn("uuid")
     public id: string;
@@ -25,8 +25,16 @@ export class Role implements RoleDTO {
     @Column({ length: 120, nullable: true })
     public description?: string;
 
-    @ManyToMany(() => Permission, { eager: true })
+    @ManyToMany(() => Permission)
     @JoinTable({ name: "role_permissions" })
     public permissions: Permission[]
+
+    public restricted(): Role {
+        return {
+            ...this,
+            description: undefined,
+            permissions: undefined
+        }
+    }
 
 }
