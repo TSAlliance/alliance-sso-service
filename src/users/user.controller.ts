@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
-import { Pageable } from "nestjs-pager";
+import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Filter, Pageable } from "nestjs-pager";
 import { Permission } from "src/roles/permission.decorator";
-import { UserDTO } from "./user.entity";
+import { User, UserDTO } from "./user.entity";
 import { UserService } from "./user.service";
 
 @ApiTags("User Controller")
@@ -13,8 +13,9 @@ export class UsersController {
 
     @Get()
     @Permission("users.read")
-    public async findAll(@Pageable() pageable: Pageable) {
-        return this.userService.findAll(pageable);
+    @ApiQuery({ name: "select", required: false, isArray: true, type: "string" })
+    public async findAll(@Pageable() pageable: Pageable, @Filter(User) filter: Filter) {
+        return this.userService.findAll(pageable, { select: filter.select as (keyof User)[], relations: filter.relations });
     }
 
     @Get(":userId")

@@ -2,6 +2,7 @@ import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/commo
 import { RandomUtil, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { PasswordService } from 'src/authentication/password.service';
+import { FindManyOptions } from 'typeorm';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
 import { UserRepository } from './user.repository';
@@ -19,8 +20,8 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    public async findAll(pageable: Pageable): Promise<Page<User>> {
-        const result = await this.userRepository.findAll(pageable);
+    public async findAll(pageable: Pageable, options?: FindManyOptions<User>): Promise<Page<User>> {
+        const result = await this.userRepository.findAll(pageable, options);
         result?.elements.map((value) => value.censored())
         return result;
     }
