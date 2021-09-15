@@ -72,6 +72,7 @@ export class User extends Account {
 
     public censored(): User {
         const user = { ...this }
+        user.accountType = undefined;
         user.password = undefined;
         user.credentialHash = undefined;
         
