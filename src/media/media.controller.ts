@@ -1,6 +1,8 @@
 import { BadRequestException, Controller, Get, Header, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { RequireAuth } from 'src/authentication/authentication.decorator';
+import { Permission } from 'src/roles/permission.decorator';
 import { AvatarUploadDTO } from './media.entity';
 import { MediaService } from './media.service';
 
@@ -12,13 +14,14 @@ export class MediaController {
         private mediaService: MediaService
     ){}
 
-    @Post("avatars/:userId")
+    @Post("avatars")
     @UseInterceptors(FileInterceptor("avatar"))
     @ApiConsumes('multipart/form-data')
     @ApiBody({
-        description: 'List of cats',
-        type: AvatarUploadDTO,
+        description: 'Avatar file',
+        type: AvatarUploadDTO
     })
+    @RequireAuth() // Only authentication
     public async uploadUserAvatar(@Param("userId") userId: string, @UploadedFile() file: Express.Multer.File) {
         if(!file) throw new BadRequestException();
         return this.mediaService.uploadAvatar(userId, file);

@@ -1,33 +1,55 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validator } from '@tsalliance/rest';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { InsufficientPermissionException, RandomUtil, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
 import { ServiceRepository } from './service.repository';
 
+const ROOT_SERVICE_ID = "*";
+
 @Injectable()
-export class ServiceService {
+export class ServiceService implements OnModuleInit {
 
     constructor(private serviceRepository: ServiceRepository){}
+    
+    public async onModuleInit(): Promise<void> {
+        if(!await this.findById("*")) {
+            const service = new Service();
+            service.id = ROOT_SERVICE_ID;
+            service.isListed = false;
+            service.title = "TSAlliance SSO";
+            service.description = "Authentication management service";
+
+            this.serviceRepository.save(service)
+        }
+    }
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Service>): Promise<Page<Service>> {
         return this.serviceRepository.findAll(pageable, options);
     }
 
     public async findById(serviceId: string): Promise<Service> {
-        return Object.assign(new Service(), await this.serviceRepository.findOneOrFail({ where: { id: serviceId } }))
+        return this.serviceRepository.findOne({ where: { id: serviceId } })
+    }
+
+    public async findByIdOrFail(serviceId: string): Promise<Service> {
+        return this.serviceRepository.findOneOrFail({ where: { id: serviceId } })
     }
 
     public async findByCredentials(clientId: string, clientSecret: string): Promise<Service> {
         return this.serviceRepository.findOneOrFail({ where: { clientId, clientSecret } })
     }
 
+    public async findRootService(): Promise<Service> {
+        return this.findById(ROOT_SERVICE_ID)
+    }
+
     public async createService(data: ServiceDTO): Promise<Service> {    
         const validator = new Validator();   
         const service = new Service();
 
-        validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().check();
-        if(data.description && validator.text("description", data.description).minLen(3).maxLen(120).check()) {
+        validator.text("title", data.title).minLen(3).maxLen(32).required().check();
+        if(validator.text("description", data.description).minLen(3).maxLen(120).check()) {
             service.description = data.description;
         }
         
@@ -43,11 +65,11 @@ export class ServiceService {
         const service: Service = await this.findById(id);        
         if(!service) throw new NotFoundException();
 
-        if(data.title && validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
+        if(validator.text("title", data.title).minLen(3).maxLen(32).check()) {
             service.title = data.title;
         }
 
-        if(data.description && validator.text("description", data.description).minLen(3).maxLen(120).check()) {
+        if(validator.text("description", data.description).minLen(3).maxLen(120).check()) {
             service.description = data.description;
         }
 
@@ -68,9 +90,8 @@ export class ServiceService {
         return this.serviceRepository.save(service);
     }
 
-    
-
     public async deleteService(id: string): Promise<DeleteResult> {
+        if(id == ROOT_SERVICE_ID) throw new InsufficientPermissionException();
         return this.serviceRepository.delete({ id })
     }
 

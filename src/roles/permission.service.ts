@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Page, Pageable } from 'nestjs-pager';
 import { ServiceService } from 'src/services/service.service';
 import { Service } from '../services/service.entity';
@@ -6,11 +6,15 @@ import { Permission, PermissionDTO } from './permission.entity';
 import { PermissionRepository } from './permission.repository';
 
 @Injectable()
-export class PermissionService {
+export class PermissionService implements OnModuleInit {
     constructor(
         private permissionRepository: PermissionRepository,
         private serviceService: ServiceService
     ){}
+
+    public async onModuleInit(): Promise<void> {
+        // TODO
+    }
 
     public async findAll(@Pageable() pageable: Pageable): Promise<Page<Permission>> {
         return this.permissionRepository.findAll(pageable);
@@ -26,8 +30,8 @@ export class PermissionService {
         })
     }
 
-    public async getCategorizedByServices(pageable: Pageable): Promise<Page<Service>> {
-        return this.serviceService.findAll(pageable, { relations: ["permission"] })
+    public async findAllCategorizedByService(pageable: Pageable): Promise<Page<Service>> {
+        return this.serviceService.findAll(pageable, { relations: ["permissionCatalog"] })
     }
 
     public async findByService(serviceId: string): Promise<Permission[]> {

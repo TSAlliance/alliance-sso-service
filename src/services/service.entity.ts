@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
 import { Permission } from "src/roles/permission.entity";
-import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinTable, ManyToMany } from "typeorm";
 
 export class ServiceDTO {
     @ApiProperty()
@@ -13,6 +13,9 @@ export class ServiceDTO {
 
     @ApiProperty({ required: false })
     description?: string;
+
+    @ApiProperty({ required: false })
+    accentColor?: string
 }
 
 @Entity()
@@ -28,7 +31,7 @@ export class Service extends Account implements ServiceDTO {
     public isListed: boolean;
     
     @Column({ nullable: true })
-    public backgroundResourceUri: string;
+    public accentColor?: string;
     
     @Column({ nullable: true })
     public bannerResourceUri: string;
@@ -41,9 +44,6 @@ export class Service extends Account implements ServiceDTO {
 
     @Column({ unique: true, nullable: false })
     public clientSecret: string;
-
-    @Column({ unique: true, nullable: false, update: false })
-    public identifier: string;
 
     @ManyToMany(() => Permission)
     @JoinTable({ name: "service_permissions_registry" })
@@ -62,7 +62,5 @@ export class Service extends Account implements ServiceDTO {
     public populateClientCredentials() {
         this.clientSecret = RandomUtil.generateClientSecret()
         this.clientId = RandomUtil.generateClientId();
-
-        this.identifier = this.title.toLowerCase()
     }
 }
