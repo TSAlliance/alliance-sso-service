@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
-import { RoleService } from 'src/roles/role.service';
+import { RoleService, ROOT_ROLE_ID } from 'src/roles/role.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Invite, InviteDTO } from './invite.entity';
 import { InviteRepository } from './invite.repository';
 
 @Injectable()
-export class InviteService implements OnModuleInit {
+export class InviteService {
 
     constructor(
         private inviteRepository: InviteRepository,
@@ -20,6 +20,10 @@ export class InviteService implements OnModuleInit {
 
     public async findById(inviteId: string): Promise<Invite> {
         return this.inviteRepository.findOne({ id: inviteId.toUpperCase() })
+    }
+
+    public async findByRoleId(roleId: string): Promise<Invite> {
+        return this.inviteRepository.findOne({ asignRole: { id: roleId }})
     }
 
     public async getInvite(inviteId: string): Promise<Invite> {
@@ -47,16 +51,14 @@ export class InviteService implements OnModuleInit {
         return this.inviteRepository.delete({ id });
     }
 
-    public async createRootInvite(): Promise<Invite> {
-        return this.createInvite({
-            maxUses: 1,
-            asignRole: await this.roleService.findOrCreateRootRole()
-        })
-    }
+    public async createDefaultInvite() {
+        const rootRole = await this.roleService.findRootRole();
 
-    public async onModuleInit() {
-        if(!(await this.roleService.findRootRole())) {
-            this.createRootInvite()
+        if(!await this.findByRoleId(ROOT_ROLE_ID)) {
+            await this.createInvite({
+                asignRole: rootRole,
+                maxUses: 1
+            })
         }
     }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InsufficientPermissionException, RandomUtil, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
@@ -8,20 +8,23 @@ import { ServiceRepository } from './service.repository';
 const ROOT_SERVICE_ID = "*";
 
 @Injectable()
-export class ServiceService implements OnModuleInit {
+export class ServiceService {
 
     constructor(private serviceRepository: ServiceRepository){}
-    
-    public async onModuleInit(): Promise<void> {
-        if(!await this.findById("*")) {
-            const service = new Service();
-            service.id = ROOT_SERVICE_ID;
-            service.isListed = false;
-            service.title = "TSAlliance SSO";
-            service.description = "Authentication management service";
 
-            this.serviceRepository.save(service)
-        }
+    public async createRootService() {
+        const service = new Service();
+        service.id = ROOT_SERVICE_ID;
+        service.isListed = false;
+        service.title = "TSAlliance SSO";
+        service.description = "Authentication management service";
+
+        await this.serviceRepository.manager.createQueryBuilder()
+            .insert()
+            .into(Service)
+            .values(service)
+            .orIgnore(`("id") DO UPDATE SET "title" = :title, "isListed" = :isListed, "description" = :description`)
+            .execute();
     }
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Service>): Promise<Page<Service>> {

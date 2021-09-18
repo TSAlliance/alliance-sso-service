@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ValidatorModule } from '@tsalliance/rest';
@@ -9,6 +9,10 @@ import { MediaModule } from './media/media.module';
 import { AuthModule } from './authentication/authentication.module';
 import { InviteModule } from './invite/invite.module';
 import { ProfileModule } from './profile/profile.module';
+import { InviteService } from './invite/invite.service';
+import { RoleService } from './roles/role.service';
+import { ServiceService } from './services/service.service';
+import { PermissionService } from './roles/permission.service';
 
 @Module({
   imports: [
@@ -37,4 +41,21 @@ import { ProfileModule } from './profile/profile.module';
   ],
   controllers: [],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+
+  constructor(
+    private serviceService: ServiceService,
+    private roleService: RoleService,
+    private permissionService: PermissionService,
+    private inviteService: InviteService,
+  ){}
+  
+  public async onModuleInit(): Promise<void> {
+    await this.serviceService.createRootService();
+    await this.roleService.createRootRole();
+    await this.permissionService.createRootPermission();
+    await this.permissionService.createDefaultPermissions();
+    await this.inviteService.createDefaultInvite();
+  }
+
+}

@@ -7,6 +7,8 @@ import { PermissionService } from './permission.service';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
 
+export const ROOT_ROLE_ID = "*"
+
 @Injectable()
 export class RoleService {
     constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){}
@@ -38,23 +40,21 @@ export class RoleService {
     }
 
     public async findRootRole(): Promise<Role> {
-        return this.findById("*");
+        return this.findById(ROOT_ROLE_ID);
     }
 
-    public async findOrCreateRootRole(): Promise<Role> {
-        let role = await this.findRootRole();
-
-        if(!role) {
-            role = new Role();
-            role.id = "*"
-            role.title = "root"
-            role.description = "Super admin role that has every possible permission.";
-            role.permissions = [ await this.permissionService.findOrCreateRootPermission() ]
-
-            role = await this.roleRepository.save(role)
-        }
-
-        return role;
+    public async createRootRole() {
+        await this.roleRepository.manager.createQueryBuilder()
+            .insert()
+            .into(Role)
+            .values({
+                id: ROOT_ROLE_ID,
+                title: "root",
+                description: "Super admin role that has every possible permission.",
+                permissions: [ await this.permissionService.findRootPermission() ]
+            })
+            .orIgnore(`("id") DO UPDATE SET "title" = :title, "description" = :description`)
+            .execute()
     }
 
     public async createRole(data: RoleDTO): Promise<Role> {

@@ -62,10 +62,9 @@ export class User extends Account {
     }
 
     public hasPermission(permission: string): boolean {
-
         if(this.role) {
             if(this.role.id == "*") return true;
-            else return this.role.permissions.map((value) => value.id).includes(Permission.formatPermission(permission))
+            else return this.role.permissions.map((value) => value.id).includes(permission)
         }
         return false;
     }
