@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Pageable } from "nestjs-pager";
-import { Permission } from "src/roles/permission.decorator";
-import { PermissionCatalog } from "src/roles/permission.registry";
+import { Permission } from "src/permission/permission.decorator";
+import { PermissionCatalog } from "src/permission/permission.registry";
 import { UserDTO } from "./user.entity";
 import { UserService } from "./user.service";
 

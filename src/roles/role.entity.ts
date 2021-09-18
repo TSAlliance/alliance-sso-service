@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Permission } from "src/permission/permission.entity";
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Permission } from "./permission.entity";
 
 export class RoleDTO {
     @ApiProperty({ required: true, maxLength: 32, minLength: 3 })

@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException
 import { Reflector } from '@nestjs/core';
 import { InsufficientPermissionException } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
-import { PERMISSION_KEY } from 'src/roles/permission.decorator';
+import { PERMISSION_KEY } from 'src/permission/permission.decorator';
 import { AuthService } from './authentication.service';
 
 @Injectable({ scope: Scope.REQUEST })

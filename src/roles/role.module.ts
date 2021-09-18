@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { RolesController } from './role.controller';
-import { PermissionService } from './permission.service';
 import { RoleService } from './role.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PermissionRepository } from './permission.repository';
 import { RoleRepository } from './role.repository';
 import { ServiceModule } from '../services/service.module';
-import { PermissionController } from './permission.controller';
+import { PermissionController } from '../permission/permission.controller';
+import { PermissionRepository } from 'src/permission/permission.repository';
+import { PermissionService } from 'src/permission/permission.service';
 
 @Module({
   controllers: [RolesController, PermissionController],

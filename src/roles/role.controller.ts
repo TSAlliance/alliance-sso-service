@@ -3,8 +3,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { Pageable } from 'nestjs-pager';
 import { Account } from 'src/account/account.entity';
 import { Authentication } from 'src/authentication/authentication.decorator';
-import { Permission } from './permission.decorator';
-import { PermissionCatalog } from './permission.registry';
+import { Permission } from 'src/permission/permission.decorator';
+import { PermissionCatalog } from 'src/permission/permission.registry';
 import { RoleDTO } from './role.entity';
 import { RoleService } from './role.service';
 

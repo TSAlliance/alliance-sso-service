@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
-import { Permission } from "src/roles/permission.entity";
+import { Permission } from "src/permission/permission.entity";
 import { BeforeInsert, Column, Entity, OneToMany } from "typeorm";
 
 export class ServiceDTO {

@@ -2,8 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { Account } from 'src/account/account.entity';
+import { PermissionService } from 'src/permission/permission.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
-import { PermissionService } from './permission.service';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
 

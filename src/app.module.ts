@@ -12,7 +12,7 @@ import { ProfileModule } from './profile/profile.module';
 import { InviteService } from './invite/invite.service';
 import { RoleService } from './roles/role.service';
 import { ServiceService } from './services/service.service';
-import { PermissionService } from './roles/permission.service';
+import { PermissionService } from './permission/permission.service';
 
 @Module({
   imports: [

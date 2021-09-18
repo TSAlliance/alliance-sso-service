@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { Page, Pageable } from 'nestjs-pager';
-import { Permission } from 'src/roles/permission.decorator';
-import { PermissionCatalog } from 'src/roles/permission.registry';
+import { Permission } from 'src/permission/permission.decorator';
+import { PermissionCatalog } from 'src/permission/permission.registry';
 import { DeleteResult } from 'typeorm';
 import { Invite, InviteDTO } from './invite.entity';
 import { InviteService } from './invite.service';
