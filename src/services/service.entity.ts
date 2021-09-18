@@ -48,10 +48,6 @@ export class Service extends Account implements ServiceDTO {
     @OneToMany(() => Permission, permission => permission.service)
     public permissions: Permission[]
 
-    constructor() {
-        super(AccountType.SERVICE, RandomUtil.randomCredentialHash())
-    }
-
     public hasPermission(permission: string): boolean {
         // First party services always have permission
         return true;
@@ -59,6 +55,8 @@ export class Service extends Account implements ServiceDTO {
 
     @BeforeInsert()
     public populateClientCredentials() {
+        this.accountType = AccountType.SERVICE;
+        this.credentialHash = RandomUtil.randomCredentialHash();
         this.clientSecret = RandomUtil.generateClientSecret()
         this.clientId = RandomUtil.generateClientId();
     }

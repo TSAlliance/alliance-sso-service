@@ -68,7 +68,7 @@ export class UserService {
         user.discordId = data.discordId;
         user.allowedServices = data.allowedServices;
         user.role = data.role
-        const result = await (await this.userRepository.save(user)).censored();
+        const result = (await this.userRepository.save(user)).censored();
 
         try {
             const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());

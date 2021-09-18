@@ -18,8 +18,8 @@ export class InviteService {
         return this.inviteRepository.findAll(pageable, options);
     }
 
-    public async findById(inviteId: string): Promise<Invite> {
-        return this.inviteRepository.findOne({ id: inviteId.toUpperCase() })
+    public async findById(inviteId: string, options?: FindManyOptions<Invite>): Promise<Invite> {
+        return this.inviteRepository.findById(inviteId, options)
     }
 
     public async findByRoleId(roleId: string): Promise<Invite> {

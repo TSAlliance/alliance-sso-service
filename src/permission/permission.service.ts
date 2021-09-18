@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Page, Pageable } from 'nestjs-pager';
 import { ServiceService } from 'src/services/service.service';
 import { Service } from '../services/service.entity';
@@ -55,8 +55,8 @@ export class PermissionService {
         })
     }
 
-    public async findAllCategorizedByService(pageable: Pageable): Promise<Page<Service>> {
-        return this.serviceService.findAll(pageable, { relations: ["permissionCatalog"] })
+    public async findAllCategorizedByService(): Promise<Service[]> {
+        return this.serviceService.getRepository().find({ relations: ["permissions"], select: ["id", "title", "description"] })
     }
 
     public async findByService(serviceId: string): Promise<Permission[]> {

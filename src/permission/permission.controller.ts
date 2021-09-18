@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
+import { Authentication, RequireAuth } from 'src/authentication/authentication.decorator';
 import { Permission } from './permission.decorator';
 import { PermissionDTO } from './permission.entity';
 import { PermissionCatalog } from './permission.registry';
@@ -12,24 +13,24 @@ export class PermissionController {
 
     constructor(private permissionService: PermissionService) {}
 
-    @Put("service/:serviceId")
+    @Put()
     @ApiOperation({
         description: "Register permissions for a service"
     })
     @ApiBody({
         isArray: true,
-        type: [PermissionDTO],
+        type: () => PermissionDTO,
         required: true
     })
-    // TODO: Service account only decorator (file: account.decorator.ts)
-    public async registerPermissions(@Param("serviceId") serviceId: string, @Body() permissions: PermissionDTO[]) {
-        return this.permissionService.registerPermissionsForService(serviceId, permissions);
+    @RequireAuth()
+    public async registerPermissions(@Body() permissions: PermissionDTO[], @Authentication() account: Account) {
+        return this.permissionService.registerPermissionsForService(account.id, permissions);
     }
 
-    @Get()
+    @Get("/categorized")
     @Permission(PermissionCatalog.PERMISSIONS_READ)
-    public async listByServices(@Pageable() pageable: Pageable) {
-        return this.permissionService.findAllCategorizedByService(pageable)
+    public async findAllCategorizedByService() {
+        return this.permissionService.findAllCategorizedByService()
     }
 
 }

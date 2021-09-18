@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
-import { Role } from "src/roles/role.entity";
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
-import { Service } from "../services/service.entity";
+import { Role, RoleDTO } from "src/roles/role.entity";
+import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
+import { Service, ServiceDTO } from "../services/service.entity";
 
 export class UserDTO {
     @ApiProperty({ required: true })
@@ -18,10 +18,10 @@ export class UserDTO {
     @ApiProperty({ required: false })
     discordId?: string;
 
-    @ApiProperty({ required: false, isArray: true, default: [] })
+    @ApiProperty({ required: false, isArray: true, default: [], type: () => ServiceDTO })
     allowedServices?: Service[]
 
-    @ApiProperty({ required: false })
+    @ApiProperty({ required: false, type: () => RoleDTO })
     role?: Role;
 }
 
@@ -56,16 +56,18 @@ export class User extends Account {
     @JoinTable({ name: "user_services" })
     public allowedServices: Service[]
 
-    constructor() {
-        super(AccountType.USER, RandomUtil.randomCredentialHash());
-    }
-
     public hasPermission(permission: string): boolean {
         if(this.role) {
             if(this.role.id == "*") return true;
             else return this.role.permissions.map((value) => value.id).includes(permission)
         }
         return false;
+    }
+
+    @BeforeInsert()
+    public insertHook() {
+        this.accountType = AccountType.USER;
+        this.credentialHash = RandomUtil.randomCredentialHash()
     }
 
     public censored(): User {

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InsufficientPermissionException, RandomUtil, Validator } from '@tsalliance/rest';
+import { InsufficientPermissionException, RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
@@ -8,9 +8,13 @@ import { ServiceRepository } from './service.repository';
 const ROOT_SERVICE_ID = "*";
 
 @Injectable()
-export class ServiceService {
+export class ServiceService implements RestService<ServiceRepository> {
 
     constructor(private serviceRepository: ServiceRepository){}
+
+    public getRepository(): ServiceRepository {
+        return this.serviceRepository;
+    }
 
     public async createRootService() {
         const service = new Service();

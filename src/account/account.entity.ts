@@ -20,10 +20,7 @@ export abstract class Account {
     @Column({ nullable: false })
     public credentialHash: string;
 
-    constructor(accountType: AccountType, credentialHash: string) {
-        this.accountType = accountType;
-        this.credentialHash = credentialHash;
-    }
-
     public abstract hasPermission(permission: string): boolean;
+
+    
 }

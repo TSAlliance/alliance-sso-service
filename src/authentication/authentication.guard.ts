@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { InsufficientPermissionException } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
 import { PERMISSION_KEY } from 'src/permission/permission.decorator';
+import { AUTH_REQUIRED_KEY } from './authentication.decorator';
 import { AuthService } from './authentication.service';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -10,37 +11,44 @@ export class AuthenticationGuard implements CanActivate {
 
   constructor(private reflector: Reflector, private authService: AuthService) {}
 
-  // TODO: Make validator not scope request for better performance
-
   canActivate(context: ExecutionContext): boolean | Promise < boolean > | Observable < boolean > {
     return new Promise(async (resolve, reject) => {
       try {
-        const requiredPermission = this.reflector.get<string>(PERMISSION_KEY, context.getHandler());
-        const headers = context.switchToHttp().getRequest().headers;
-        const authHeaderValue = headers["authorization"]
+        const permissionsList: string[] = this.reflector.get<string[]>(PERMISSION_KEY, context.getHandler());
+        const requiresAuth: boolean = this.reflector.get<boolean>(AUTH_REQUIRED_KEY, context.getHandler()) || !!permissionsList;
+        const headers: any = context.switchToHttp().getRequest().headers;
+        const authHeaderValue: string = headers["authorization"]
 
-        // Check if some permission is required to access route
-        if(requiredPermission) {
+        if(requiresAuth) {
+          // Authentication needed
           // If no header exists -> throw unauthorized
           if(!authHeaderValue) {
             throw new UnauthorizedException()
-          } else {
+          }
 
-            // If header exists -> proceed with authentication and authorization
-            const account = await this.authService.signInWithToken(authHeaderValue);
-            if(!account.hasPermission(requiredPermission)) {
+          // If header exists -> proceed with authentication and authorization
+          const account = await this.authService.signInWithToken(authHeaderValue);
+
+          // Only check for permissions if there are permissions set on the route handler
+          if(permissionsList) {
+            // If there are multiple permissions set, it means OR.
+            // So only one permission must be granted to successfully proceed.
+            const permissionGranted = !!permissionsList.find((permission) => account.hasPermission(permission));
+
+            if(!permissionGranted) {
               throw new InsufficientPermissionException();
             }
-            
-            // Make authentication object available to future actions in the handler chain
-            // The @Authentication param decorator as an example uses this to return the authentication
-            // object.
-            context.switchToHttp().getRequest().authentication = account;
-            resolve(true)
           }
-        } else {
+            
+          // Make authentication object available to future actions in the handler chain
+          // The @Authentication param decorator as an example uses this to return the authentication
+          // object.
+          context.switchToHttp().getRequest().authentication = account;
           resolve(true)
-        }  
+        } else {
+          // No authentication needed
+          resolve(true)
+        }
       } catch (err) {
         reject(err)
       }

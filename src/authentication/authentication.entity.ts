@@ -106,7 +106,6 @@ export interface JwtResponseDTO {
     expiresAt?: Date;
     issuedAt?: Date;
     token: string;
-    issuedTo: Account;
 }
 
 export interface JwtDTO {

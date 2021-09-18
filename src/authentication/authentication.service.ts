@@ -122,8 +122,7 @@ export class AuthService {
         return {
             token: this.jwtService.sign(tokenDTO),
             expiresAt,
-            issuedAt: new Date(),
-            issuedTo: account
+            issuedAt: new Date()
         }
     }
 
@@ -132,7 +131,7 @@ export class AuthService {
      * @param registration Registration Data 
      */
     public async register(registration: RegistrationDTO) {   
-        const invite = await this.inviteService.findById(registration.inviteCode);
+        const invite = await this.inviteService.findById(registration.inviteCode, { relations: ["asignRole"] });
         if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException();
 
         await this.userService.createUser({
