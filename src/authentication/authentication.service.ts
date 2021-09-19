@@ -11,6 +11,7 @@ import { ValidationException, CredentialsMismatchException, SessionExpiredExcept
 import { InviteService } from 'src/invite/invite.service';
 import { Service } from 'src/services/service.entity';
 import { DeleteResult } from 'typeorm';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,8 @@ export class AuthService {
         private serviceService: ServiceService,
         private passwordService: PasswordService,
         private recoveryTokenRepository: RecoveryTokenRepository,
-        private inviteService: InviteService
+        private inviteService: InviteService,
+        private mailService: MailService
     ){}
 
     public async signInWithCredentials(credentials: CredentialsDTO): Promise<JwtResponseDTO> {
@@ -162,7 +164,8 @@ export class AuthService {
             await this.deleteRecoveryTokenOfUser(user.id);
         }
 
-        await this.recoveryTokenRepository.save(new AccountRecoveryToken(user));
+        const token = await this.recoveryTokenRepository.save(new AccountRecoveryToken(user))
+        await this.mailService.sendRecoveryMail({ token })
     }
 
     /**

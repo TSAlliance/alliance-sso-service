@@ -1,0 +1,66 @@
+<mjml>
+    <mj-head>
+        <mj-title>Kontowiederherstellung</mj-title>
+        <mj-preview>Informationen zu deiner Kontowiederherstellung</mj-preview>
+        <mj-attributes>
+            <mj-all font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"></mj-all>
+            <mj-text font-weight="500" font-size="14px" color="#ebebeb" line-height="26px"
+                font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"></mj-text>
+        </mj-attributes>
+        <mj-style inline="inline">.body-section {
+            -webkit-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15);
+            -moz-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15);
+            box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15);
+            }</mj-style>
+        <mj-style inline="inline">.text-link {
+            color: #5e6ebf
+            }</mj-style>
+        <mj-style inline="inline">.footer-link {
+            color: #888888
+            }</mj-style>
+    </mj-head>
+    <mj-body background-color="#222831" width="600px">
+        <mj-section full-width="full-width">
+                <mj-column width="100%">
+                    <mj-image src="{{logoImageData}}" alt=""
+                        align="center" height="50px"></mj-image>
+                    </mj-text>
+                </mj-column>
+        </mj-section>
+        <mj-wrapper background-color="#3d4550" padding="0px" border-radius="8px">
+            <mj-section padding="20px">
+                <mj-column width="100%" background-color="#29303b" border-radius="8px" padding="20px">
+                    <mj-image src="{{bannerImageData}}" height="200px" alt="" padding="0px"
+                        href="https://google.com"></mj-image>
+                </mj-column>
+            </mj-section>
+            <mj-section padding="0px">
+                <mj-column width="100%">
+                    <mj-text font-size="28px" font-weight="700">Kontowiederherstellung</mj-text>
+                </mj-column>
+            </mj-section>
+            <mj-section>
+                <mj-column width="100%">
+                    <mj-text>Hey {{ username }},</mj-text>
+                    <mj-text>wir haben eine Anfrage von dir erhalten, dass du dein Konto wiederherstellen willst. Um fortzufahren gib folgenden Code ein<br></mj-text>
+                    <mj-text font-size="20px" font-weight="bold">{{ code }}</mj-text>
+                    <mj-text>Sollte das nicht von dir veranlasst worden sein, dann kannst du diese E-Mail ignorieren. Der Code läuft nach 10 Minuten ab.</mj-text>
+                </mj-column>
+            </mj-section>
+            <mj-section padding="0px">
+                <mj-column width="100%">
+                    <mj-text>Grüße,<br>Dein TSAlliance-Team</mj-text>
+                </mj-column>
+            </mj-section>
+        </mj-wrapper>
+        </mj-wrapper>
+        <mj-wrapper full-width="full-width" padding="0px">
+            <mj-section padding="0px">
+                <mj-column width="100%" padding="0px">
+                    <mj-text font-weight="400" font-size="9px" align="center" line-height="16px">&copy; TSAlliance | All
+                        Rights Reserved.</mj-text>
+                </mj-column>
+            </mj-section>
+        </mj-wrapper>
+    </mj-body>
+</mjml>

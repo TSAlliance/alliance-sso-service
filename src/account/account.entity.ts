@@ -1,4 +1,3 @@
-import { RandomUtil } from "@tsalliance/rest";
 import { Column, CreateDateColumn, PrimaryGeneratedColumn } from "typeorm";
 
 export enum AccountType {
@@ -21,6 +20,4 @@ export abstract class Account {
     public credentialHash: string;
 
     public abstract hasPermission(permission: string): boolean;
-
-    
 }
