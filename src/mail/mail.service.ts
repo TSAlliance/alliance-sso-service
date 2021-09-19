@@ -13,7 +13,8 @@ export interface RecoveryMailDTO {
 export class MailService {
     constructor(private mailerService: MailerService) {}
 
-    public async sendRecoveryMail(data: RecoveryMailDTO) {    
+    public async sendRecoveryMail(data: RecoveryMailDTO) {   
+        // TODO: Implement asset service (microservice) 
         await this.mailerService.sendMail({
             to: data.token.user.email,
             // from: '"Support Team" <support@example.com>', // override default from
