@@ -6,8 +6,4 @@ import { MailService } from './mail.service';
     providers: [ MailService ],
     exports: [ MailService ]
 })
-export class MailModule {
-    constructor() {
-        console.log(process.env.SMTP_HOST)
-    }
-}
+export class MailModule {}

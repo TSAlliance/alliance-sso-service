@@ -19,6 +19,9 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import path from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
+const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
+const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
+
 @Module({
   imports: [
     ValidatorModule,
@@ -27,10 +30,13 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     UsersModule,
     MediaModule,
     AuthModule,
+    InviteModule, 
+    ProfileModule, 
+    MailModule,
     ConfigModule.forRoot(
       {
         isGlobal: true, 
-        envFilePath: [".dev.env", ".prod.env", "*.env"]
+        envFilePath: envFile
       }
     ),  // Load .env file for configuration
     TypeOrmModule.forRoot({
@@ -41,14 +47,14 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       entities: [
-        "dist/**/*.entity{ .ts,.js}",
+        ...[(isDev ? "dist/**/*.entity{ .ts,.js}" : "**/*.entity{ .ts,.js}")]
       ],
       synchronize: true,
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000,
       subscribers: [
-        "dist/**/*.subscriber{ .ts,.js}"
+        ...[(isDev ? "dist/**/*.subscriber{ .ts,.js}" : "**/*.subscriber{ .ts,.js}")]
       ]
     }),
     MailerModule.forRoot({
@@ -71,10 +77,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
               strict: false,
           }
       }
-    }), 
-    InviteModule, 
-    ProfileModule, 
-    MailModule, 
+    }),
     SubscriberModule
   ],
   controllers: [],

@@ -4,13 +4,15 @@
   "description": "",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build",
+    "build": "nest build && npm run copy:ecosys",
     "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:prod": "node dist/main"
+    "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:prod": "node dist/main",
+    "start:pm2": "pm2 reload ecosystem.config.js",
+    "copy:ecosys": "cpx ecosystem.config.js dist/ && cpx package.json dist/"
   },
   "dependencies": {
     "@dicebear/avatars": "^4.7.2",
@@ -23,6 +25,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/swagger": "^5.0.9",
     "@nestjs/typeorm": "^8.0.2",
+    "@pm2/io": "^5.0.0",
     "@tsalliance/rest": "^2.0.37",
     "bcrypt": "^5.0.1",
     "handlebars": "^4.7.7",
@@ -50,6 +53,8 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
+    "cpx": "^1.5.0",
+    "cross-env": "^7.0.3",
     "eslint": "^7.30.0",
     "jest": "27.0.6",
     "supertest": "^6.1.3",

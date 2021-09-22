@@ -2,7 +2,7 @@
 /dist
 /node_modules
 
-.dev.env
+.env.development
 
 uploads/
 package-lock.json

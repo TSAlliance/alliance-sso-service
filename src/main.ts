@@ -2,6 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ApiExceptionFilter } from "@tsalliance/rest"
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import io from "@pm2/io"
+
+const portMetric = io.metric({
+  id: "app/port",
+  name: "Application Port"
+})
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +25,10 @@ async function bootstrap() {
 
   console.log(process.env.APP_PORT)
   const port = process.env.APP_PORT || 3000;
+  portMetric.set(port.toString())
+
+  console.log("default")
+  console.log(process.env.ENV)
   await app.listen(port);
 }
 
