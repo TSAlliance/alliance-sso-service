@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { AccountType } from "src/account/account.entity";
 import { User } from "src/users/user.entity";
-import { AfterInsert, BeforeInsert, Column, Entity, JoinColumn, OneToOne } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, OneToOne } from "typeorm";
 
 export class CredentialsDTO {
 

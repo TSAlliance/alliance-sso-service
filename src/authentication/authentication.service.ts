@@ -7,11 +7,12 @@ import { UserService } from 'src/users/user.service';
 import { User } from 'src/users/user.entity';
 import { RecoveryTokenRepository } from './authentication.repository';
 import { PasswordService } from './password.service';
-import { ValidationException, CredentialsMismatchException, SessionExpiredException, AccountNotFoundException } from '@tsalliance/rest';
+import { ValidationException, CredentialsMismatchException, SessionExpiredException } from '@tsalliance/rest';
 import { InviteService } from 'src/invite/invite.service';
 import { Service } from 'src/services/service.entity';
 import { DeleteResult } from 'typeorm';
 import { MailService } from 'src/mail/mail.service';
+import { SSOAccountMissingError } from 'client/src/errors';
 
 @Injectable()
 export class AuthService {
@@ -98,7 +99,7 @@ export class AuthService {
                 account = Object.assign(new Service(), await this.serviceService.findById(token.id))
             }
         } catch (err) {
-            throw new AccountNotFoundException();
+            throw new SSOAccountMissingError();
         }
 
         // Check if credentials have changed, so that the jwt can get rejected
