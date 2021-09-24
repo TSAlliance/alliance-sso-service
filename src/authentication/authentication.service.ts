@@ -118,7 +118,7 @@ export class AuthService {
      */
     private async issueJwt(account: Service | User, stayLoggedIn = false): Promise<JwtResponseDTO> {
         const tokenDTO: JwtDTO = { id: account.id, accountType: account.accountType, credentialHash: account.credentialHash }
-        const expiresAt: Date = new Date(Date.now() + (1000 * 60 * 60 * 24 * 7));
+        const expiresAt: Date = (stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7)));
         if(!stayLoggedIn) tokenDTO.exp = expiresAt.getTime();
         
         return {
