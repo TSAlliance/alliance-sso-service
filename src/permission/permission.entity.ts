@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Role } from "src/roles/role.entity";
 import { Service } from "src/services/service.entity";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export class PermissionDTO {
     @ApiProperty({ required: false, maxLength: 32, minLength: 3 })
@@ -25,6 +26,9 @@ export class Permission implements PermissionDTO {
     @ManyToOne(() => Service, { onDelete: "CASCADE", nullable: false })
     @JoinColumn()
     public service: Service;
+
+    @ManyToMany(() => Role)
+    public roles: Role[];
 
     /**
      * Create a new permission object

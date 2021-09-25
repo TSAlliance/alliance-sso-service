@@ -44,17 +44,29 @@ export class RoleService {
     }
 
     public async createRootRole() {
+        const rootPermission = await this.permissionService.findRootPermission();
+        const role = {
+            id: ROOT_ROLE_ID,
+            title: "root",
+            description: "Super admin role that has every possible permission."
+        }
+        
         await this.roleRepository.manager.createQueryBuilder()
+            .relation(Role, "permissions")
             .insert()
             .into(Role)
-            .values({
-                id: ROOT_ROLE_ID,
-                title: "root",
-                description: "Super admin role that has every possible permission.",
-                permissions: [ await this.permissionService.findRootPermission() ]
-            })
+            .values(role)
             .orIgnore(`("id") DO UPDATE SET "title" = :title, "description" = :description`)
             .execute()
+            .catch(() => { /* Do nothing */ })
+        
+        await this.roleRepository.manager.createQueryBuilder()
+            .relation(Role, "permissions")
+            .of(role)
+            .add(rootPermission).then(() => {
+                console.log("inserted relation")
+            })
+            .catch(() => { /* Do nothing */ })
     }
 
     public async createRole(data: RoleDTO): Promise<Role> {
