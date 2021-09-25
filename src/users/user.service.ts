@@ -27,7 +27,7 @@ export class UserService {
     }
 
     public async findById(userId: string, withSensitive = false): Promise<User> {
-        const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role"]});
+        const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role", "role.permissions"]});
         if(!withSensitive) {
             return result?.censored();
         }

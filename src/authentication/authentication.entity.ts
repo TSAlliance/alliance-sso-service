@@ -104,7 +104,7 @@ export class AccountRecoveryToken {
 
 export interface JwtResponseDTO {
     expiresAt?: Date;
-    issuedAt?: Date;
+    issuedAt: Date;
     token: string;
 }
 

@@ -47,14 +47,14 @@ const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       entities: [
-        ...[(isDev ? "dist/**/*.entity{ .ts,.js}" : "**/*.entity{ .ts,.js}")]
+        ...[(isDev ? "dist/**/*.entity{ .ts,.js}" : "src/**/*.entity{ .ts,.js}")]
       ],
       synchronize: true,
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000,
       subscribers: [
-        ...[(isDev ? "dist/**/*.subscriber{ .ts,.js}" : "**/*.subscriber{ .ts,.js}")]
+        ...[(isDev ? "dist/**/*.subscriber{ .ts,.js}" : "src/**/*.subscriber{ .ts,.js}")]
       ]
     }),
     MailerModule.forRoot({
@@ -93,8 +93,8 @@ export class AppModule implements OnModuleInit {
   
   public async onModuleInit(): Promise<void> {
     await this.serviceService.createRootService();
-    await this.roleService.createRootRole();
     await this.permissionService.createRootPermission();
+    await this.roleService.createRootRole();
     await this.permissionService.createDefaultPermissions();
     await this.inviteService.createDefaultInvite();
   }

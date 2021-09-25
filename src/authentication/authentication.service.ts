@@ -12,7 +12,7 @@ import { InviteService } from 'src/invite/invite.service';
 import { Service } from 'src/services/service.entity';
 import { DeleteResult } from 'typeorm';
 import { MailService } from 'src/mail/mail.service';
-import { SSOAccountMissingError } from 'client/src/errors';
+import { SSOAccountMissingError } from "client/src/error/errors"
 
 @Injectable()
 export class AuthService {
