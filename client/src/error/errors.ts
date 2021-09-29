@@ -12,9 +12,15 @@ export class SSOAccountMissingError extends ApiError {
     }
 }
 
-export class SSOSessionExpired extends ApiError {
+export class SSOSessionExpiredError extends ApiError {
     constructor() {
         super("Session expired.", 403, "SESSION_EXPIRED");
+    }
+}
+
+export class SSOUnauthorizedError extends ApiError {
+    constructor() {
+        super("Unauthorized.", 403, "UNAUTHORIZED");
     }
 }
 
