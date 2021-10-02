@@ -8,17 +8,23 @@
   "scripts": {
     "package-publish": "npm run build && npm version patch --no-git-tag-version && npm publish --access public",
     "build": "npm run format && tsc",
-    "start:dev": "nodemon --watch \"./src/**\" --ext \"json,ts\" --ignore \"./src/**/*.spec.ts\" --exec \"ts-node ./src/index.ts\"",
+    "start:dev": "cross-env NODE_ENV=development nodemon --watch \"./src/**\" --ext \"json,ts,.env\" --exec \"ts-node ./src/index.spec.ts\"",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
-    "@tsalliance/sdk": "^1.0.2",
+    "@tsalliance/rest": "^2.0.41",
+    "@tsalliance/sdk": "^1.0.4",
     "axios": "^0.21.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/preset-typescript": "^7.15.0",
     "@nestjs/common": "^8.0.7",
     "@types/axios": "^0.14.0",
     "@types/node": "^15.14.9",
+    "cross-env": "^7.0.3",
+    "dotenv": "^10.0.0",
     "nodemon": "^2.0.12",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"

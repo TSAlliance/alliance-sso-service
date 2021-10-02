@@ -22,12 +22,22 @@ export class UserService {
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<User>): Promise<Page<User>> {
         const result = await this.userRepository.findAll(pageable, options);
+        // TODO: Filtering of sensitive data does not work. Maybe use TypeORM Views?
         result?.elements.map((value) => value.censored())
         return result;
     }
 
     public async findById(userId: string, withSensitive = false): Promise<User> {
         const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role", "role.permissions"]});
+        if(!withSensitive) {
+            return result?.censored();
+        }
+        
+        return Object.assign(new User(), result);
+    }
+
+    public async findByIdOrFail(userId: string, withSensitive = false): Promise<User> {
+        const result = await this.userRepository.findOneOrFail({ where: { id: userId }, relations: ["role", "role.permissions"]});
         if(!withSensitive) {
             return result?.censored();
         }
@@ -74,7 +84,6 @@ export class UserService {
             const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());
             const avatarResourceInfo = await this.mediaService.setUserAvatar(result.id, avatarSvgData);
     
-            result.avatarResourceUri = avatarResourceInfo.resourceUri;
             result.avatarResourceId = avatarResourceInfo.resourceId;
         } catch (err) {
             // Do nothing -> Silently fail

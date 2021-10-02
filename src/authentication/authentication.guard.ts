@@ -28,9 +28,23 @@ export class AuthenticationGuard implements CanActivate {
 
           // If header exists -> proceed with authentication and authorization
           const account = await this.authService.signInWithToken(authHeaderValue);
+            
+          // Make authentication object available to future actions in the handler chain
+          // The @Authentication param decorator as an example uses this to return the authentication
+          // object.
+          context.switchToHttp().getRequest().authentication = account;
+          const params = context.switchToHttp().getRequest().params;
+          let includesScopedParam = false
+
+          for(const key in params) {
+            if(params[key].toString().toLowerCase() == "@me") {
+              params[key] = account.id
+              includesScopedParam = true
+            }
+          }
 
           // Only check for permissions if there are permissions set on the route handler
-          if(permissionsList) {
+          if(permissionsList && !includesScopedParam) {
             // If there are multiple permissions set, it means OR.
             // So only one permission must be granted to successfully proceed.
             const permissionGranted = !!permissionsList.find((permission) => account.hasPermission(permission));
@@ -39,11 +53,7 @@ export class AuthenticationGuard implements CanActivate {
               throw new InsufficientPermissionException();
             }
           }
-            
-          // Make authentication object available to future actions in the handler chain
-          // The @Authentication param decorator as an example uses this to return the authentication
-          // object.
-          context.switchToHttp().getRequest().authentication = account;
+
           resolve(true)
         } else {
           // No authentication needed

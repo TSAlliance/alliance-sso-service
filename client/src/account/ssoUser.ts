@@ -1,4 +1,5 @@
-import { SSORole } from "src/permission/ssoRole";
+import { SSOServiceDTO } from "src/dto/service.dto";
+import { SSORoleDTO } from "src/dto/role.dto";
 import { AccountType } from "../../../src/account/account.entity";
 import { SSOAccount } from "./ssoAccount";
 
@@ -9,8 +10,8 @@ export class SSOUser extends SSOAccount {
     public discordId?: string;
     public avatarResourceUri: string;
     public avatarResourceId: string;
-    public role: SSORole;
-    public allowedServices: any[]
+    public role: SSORoleDTO;
+    public allowedServices: SSOServiceDTO[]
 
     constructor() {
         super(AccountType.USER)

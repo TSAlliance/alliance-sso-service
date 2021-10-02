@@ -7,8 +7,9 @@ import { SSOStore } from "./store/ssoStore";
 import { SSOSession } from "./session/ssoSession";
 import { ApiError } from "@tsalliance/sdk";
 import { SSOAccount } from "./account/ssoAccount";
+import { SSOJwtResponseDTO } from "./dto/jwt.dto";
 
-export abstract class SSOClient {
+export class SSOClient {
     private static _instance: SSOClient;
     private static readonly _store: SSOStore = new SSOStore();
     private static readonly _session: SSOSession = new SSOSession();
@@ -33,15 +34,18 @@ export abstract class SSOClient {
         return this._session;
     }
 
-    public useConfig(config: SSOConfig) {
+    public useConfig(config: SSOConfig): SSOClient {
         this._config = config;
         this.setBaseUrl();
         this.setAxiosConfig();
+
+        return this;
     }
 
-    public useAxiosConfig(axiosConfig: AxiosRequestConfig) {
+    public useAxiosConfig(axiosConfig: AxiosRequestConfig): SSOClient {
         this._axiosConf = axiosConfig;
         this.setAxiosConfig();
+        return this;
     }
 
     public getAxiosConfig(): AxiosRequestConfig {
@@ -65,12 +69,12 @@ export abstract class SSOClient {
      */
     public async signInWithCredentials(identifier: string, password: string, options?: SSOSignInOptions): Promise<SSOSession> {
         return new Promise((resolve) => {
-            axios.post<JwtResponseDTO>(this.getBaseUrl() + "/authentication/authenticate", {
+            axios.post<SSOJwtResponseDTO>(this.getBaseUrl() + "/authentication/authenticate", {
                 accountType: options?.accountType || AccountType.USER,
                 identifier,
                 password,
                 stayLoggedIn: options?.stayLoggedIn || false
-            }).then((value: AxiosResponse<JwtResponseDTO>) => {
+            }).then((value: AxiosResponse<SSOJwtResponseDTO>) => {
                 // TODO
                 SSOClient.session().setSession(value.data)
                 resolve(SSOClient._session)
@@ -88,8 +92,24 @@ export abstract class SSOClient {
     }
 
     public async authorizeToken(token: string): Promise<SSOAccount> {
-        // TODO
-        return;
+        return new Promise((resolve, reject) => {
+            axios.post<SSOAccount>(this.getBaseUrl() + "/users/@me" + , {
+                accountType: options?.accountType || AccountType.USER,
+                identifier,
+                password,
+                stayLoggedIn: options?.stayLoggedIn || false
+            }).then((value: AxiosResponse<SSOAccount>) => {
+                resolve(value.data)
+            }).catch((reason: AxiosError) => {
+                let error: ApiError = new InternalError();
+
+                if(reason.isAxiosError) {
+                    error = reason.response.data as ApiError
+                }
+
+                reject(error)
+            })
+        });
     }
 
     /**
@@ -127,6 +147,7 @@ export class SSOUserClient extends SSOClient {
 
 export const SSOAxiosInterceptor = (config: AxiosRequestConfig) => {
     const conf = { ...config, ...SSOClient.instance().getAxiosConfig() }
+    console.log("sso axios interceptor")
 
     if(SSOClient.session().isLoggedIn()) {
         conf.headers['Authorization'] = "Bearer " + SSOClient.store().getSession().getToken();

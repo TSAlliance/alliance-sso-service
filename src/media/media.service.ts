@@ -68,7 +68,7 @@ export class MediaService {
      * @param data Image encoded as string or buffer.
      * @returns Promise containing resource hash and resource uri for the avatar
      */
-    public async setUserAvatar(userId: string, data: string | Buffer): Promise<{ resourceId: string, resourceUri: string }> {
+    public async setUserAvatar(userId: string, data: string | Buffer): Promise<{ resourceId: string }> {
         const user: User = await this.userService.findById(userId);
         if(!user) throw new NotFoundException();
 
@@ -79,7 +79,6 @@ export class MediaService {
         const destFilepath: string = this.AVATAR_UPLOAD_DIR + destFilename;        
 
         user.avatarResourceId = resourceHash;
-        user.avatarResourceUri = "alliance:avatars:" + userId + ":" + resourceHash;
 
         // If changes are made here, make sure these are also done inside the serveAvatar() method!!!
         await this.saveOptimizedImage(destFilepath, data, "jpeg", { 
@@ -104,7 +103,6 @@ export class MediaService {
 
         return {
             resourceId: resourceHash,
-            resourceUri: user.avatarResourceUri
         }
     }
 

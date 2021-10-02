@@ -43,9 +43,6 @@ export class User extends Account {
     public discordId?: string;
 
     @Column({ nullable: true })
-    public avatarResourceUri: string;
-
-    @Column({ nullable: true })
     public avatarResourceId: string;
 
     @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL", eager: true })

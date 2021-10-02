@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common"
 import { MailerService } from '@nestjs-modules/mailer';
 import { AccountRecoveryToken } from "src/authentication/authentication.entity";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
 import mime from "mime"
 
@@ -17,9 +17,8 @@ export class MailService {
         // TODO: Implement asset service (microservice) 
         await this.mailerService.sendMail({
             to: data.token.user.email,
-            // from: '"Support Team" <support@example.com>', // override default from
             subject: 'Informationen zu deiner Kontowiederherstellung',
-            template: './recovery.template.hbs',
+            template: this.templatePath("recovery.template.hbs"),
             context: {
                 username: data.token.user.username,
                 code: data.token.code,
@@ -29,9 +28,33 @@ export class MailService {
         });
     }
 
+    private getBaseDir(): string {
+        return path.resolve((process.env.NODE_ENV == "production" ? process.cwd() : process.cwd() + "/dist"));
+    }
+
+    private templatePath(filename: string): string {
+        const paths = [
+            path.resolve(__dirname, "templates/" + filename),
+            path.resolve(this.getBaseDir(), "mail/templates/" + filename)
+        ]
+
+        return paths.find((path) => existsSync(path));
+    }
+
     private assetUrlToBase64(filename: string): string {
-        const filePath = path.resolve(__dirname, "templates/assets/" + filename);
-        const base64Data = "data:" + mime.lookup(filePath) + ";base64," + readFileSync(filePath).toString("base64");
+        const paths = [
+            path.resolve(__dirname, "templates/" + filename),
+            path.resolve(this.getBaseDir(), "mail/templates/" + filename)
+        ]
+
+        let base64Data = "";
+        for(const path of paths) {
+            if(existsSync(paths[0])) {
+                base64Data = "data:" + mime.lookup(path) + ";base64," + readFileSync(path).toString("base64")
+                break;
+            }
+        }
+
         return base64Data
     }
 }

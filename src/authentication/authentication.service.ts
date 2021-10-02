@@ -40,6 +40,7 @@ export class AuthService {
             }
 
             account = (account as User).censored();
+            account.accountType = AccountType.USER;
         } else {
             // Login as service
             credentials.stayLoggedIn = true
@@ -50,6 +51,7 @@ export class AuthService {
 
             account = (await this.serviceService.findByCredentials(clientId, clientSecret)) as Service;
             if(!account) throw new NotFoundException();
+            account.accountType = AccountType.SERVICE;
         }
 
         return this.issueJwt(account, credentials.stayLoggedIn);
@@ -94,9 +96,9 @@ export class AuthService {
 
         try {
             if(token.accountType == AccountType.USER) {
-                account = Object.assign(new User(), await this.userService.findById(token.id))
+                account = Object.assign(new User(), await this.userService.findByIdOrFail(token.id))
             } else {
-                account = Object.assign(new Service(), await this.serviceService.findById(token.id))
+                account = Object.assign(new Service(), await this.serviceService.findByIdOrFail(token.id))
             }
         } catch (err) {
             throw new SSOAccountMissingError();

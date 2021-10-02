@@ -1,12 +1,13 @@
 import { ApiError } from "@tsalliance/sdk";
-import { JwtResponseDTO } from "../../../src/authentication/authentication.entity";
+import { SSOAccount } from "src/account/ssoAccount";
+import { SSOJwtResponseDTO } from "src/dto/jwt.dto";
 
-export class SSOSession<T> {
+export class SSOSession {
     private token: string;
     private issuedAt: Date;
     private expiresAt?: Date;
     private authenticationError?: ApiError;
-    private account: T;
+    private account?: SSOAccount;
 
     public getToken() {
         return this.token;
@@ -21,7 +22,11 @@ export class SSOSession<T> {
         return this.authenticationError;
     }
     public getAccount() {
-        return this
+        return this.account
+    }
+
+    public hasError(): boolean {
+        return !!this.authenticationError;
     }
 
     /**
@@ -36,7 +41,7 @@ export class SSOSession<T> {
      * Set token response as new session. This clears all authentication errors.
      * @param tokenResponse Response to save as session
      */
-    public setSession(tokenResponse: JwtResponseDTO) {
+    public setSession(tokenResponse: SSOJwtResponseDTO) {
         this.clear();
         this.token = tokenResponse.token;
         this.issuedAt = tokenResponse.issuedAt;
