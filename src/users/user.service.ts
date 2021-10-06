@@ -22,8 +22,7 @@ export class UserService {
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<User>): Promise<Page<User>> {
         const result = await this.userRepository.findAll(pageable, options);
-        // TODO: Filtering of sensitive data does not work. Maybe use TypeORM Views?
-        result?.elements.map((value) => value.censored())
+        result?.elements.forEach((value) => value = value.censored())
         return result;
     }
 
