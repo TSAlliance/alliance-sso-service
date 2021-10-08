@@ -63,6 +63,8 @@ export class AuthService {
      * @returns Account object
      */
     public async signInWithToken(authorizationHeaderValue: string): Promise<Service | User> {
+        if(!authorizationHeaderValue) return null;
+        
         const token = this.processAuthorizationValue(authorizationHeaderValue);
         const decoded: JwtDTO = this.jwtService.decode(token) as JwtDTO;
         
