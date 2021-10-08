@@ -1,8 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
-import { Authentication } from 'src/authentication/authentication.decorator';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { RoleDTO } from './role.entity';
@@ -17,14 +15,14 @@ export class RolesController {
 
     @Get()
     @Permission(PermissionCatalog.ROLES_READ)
-    public async listAll(@Pageable() pageable: Pageable, @Authentication() authentication: Account) {
-        return this.roleService.findAll(pageable, null, authentication)
+    public async listAll(@Pageable() pageable: Pageable) {
+        return this.roleService.findAll(pageable)
     }
 
     @Get(":roleId")
     @Permission(PermissionCatalog.ROLES_READ)
-    public async findById(@Param("roleId") roleId: string, @Authentication() authentication: Account) {
-        return this.roleService.findById(roleId, { relations: ["permissions"] }, authentication)
+    public async findById(@Param("roleId") roleId: string) {
+        return this.roleService.findById(roleId, { relations: ["permissions"] })
     }
 
     @Post()

@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
 import { PermissionService } from 'src/permission/permission.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Role, RoleDTO } from './role.entity';
@@ -13,29 +12,18 @@ export const ROOT_ROLE_ID = "*"
 export class RoleService {
     constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){}
 
-    public async findAll(pageable: Pageable, options: FindManyOptions<Role> = {}, authentication?: Account): Promise<Page<Role>> {
+    public async findAll(pageable: Pageable, options: FindManyOptions<Role> = {}): Promise<Page<Role>> {
         if(!options) options = {}
 
         const result = await this.roleRepository.findAll(pageable, options)
-        result.elements.map((role) => {
-            if(!authentication?.hasPermission("roles.read")) {
-                return role?.restricted()
-            } else {
-                return role;
-            }
-        })
         return result
     }
 
-    public async findById(roleId: string, options: FindManyOptions<Role> = {}, authentication?: Account): Promise<Role> {
+    public async findById(roleId: string, options: FindManyOptions<Role> = {}): Promise<Role> {
         if(!options) options = {}
 
         options.where = { id: roleId }
         const result = await this.roleRepository.findOne(options)
-        if(!authentication?.hasPermission("roles.read")) {
-            return result?.restricted()
-        }
-
         return result;
     }
 
@@ -63,9 +51,7 @@ export class RoleService {
         await this.roleRepository.manager.createQueryBuilder()
             .relation(Role, "permissions")
             .of(role)
-            .add(rootPermission).then(() => {
-                console.log("inserted relation")
-            })
+            .add(rootPermission)
             .catch(() => { /* Do nothing */ })
     }
 

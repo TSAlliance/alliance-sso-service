@@ -1,5 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CanRead, CanReadPermission } from "src/permission/permission.decorator";
 import { Permission, PermissionDTO } from "src/permission/permission.entity";
+import { PermissionCatalog } from "src/permission/permission.registry";
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 
 export class RoleDTO {
@@ -22,19 +24,13 @@ export class Role {
     @Column({ length: 32, nullable: false, unique: true })
     public title: string;
 
+    @CanReadPermission(PermissionCatalog.ROLES_READ)
     @Column({ length: 120, nullable: true })
     public description?: string;
 
+    @CanReadPermission(PermissionCatalog.ROLES_READ)
     @ManyToMany(() => Permission)
     @JoinTable({ name: "role_permissions" })
     public permissions: Permission[]
-
-    public restricted(): Role {
-        return {
-            ...this,
-            description: undefined,
-            permissions: undefined
-        }
-    }
 
 }

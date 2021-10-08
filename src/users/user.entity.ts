@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
+import { CanRead, CanReadPermission } from "src/permission/permission.decorator";
+import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role, RoleDTO } from "src/roles/role.entity";
 import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 import { Service, ServiceDTO } from "../services/service.entity";
@@ -33,22 +35,27 @@ export class User extends Account {
     @Column({ length: 32, nullable: false, unique: true })
     public username: string;
 
+    @CanReadPermission(PermissionCatalog.USERS_READ)
     @Column({ nullable: false, unique: true })
     public email: string;
 
+    @CanRead(false)
     @Column({ nullable: false })
     public password: string;
 
+    @CanReadPermission(PermissionCatalog.USERS_READ)
     @Column({ unique: true, nullable: true })
     public discordId?: string;
 
     @Column({ nullable: true })
     public avatarResourceId: string;
 
+    @CanReadPermission(PermissionCatalog.USERS_READ)
     @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL", eager: true })
     @JoinColumn()
     public role: Role;
 
+    @CanReadPermission(PermissionCatalog.USERS_READ)
     @ManyToMany(() => Service)
     @JoinTable({ name: "user_services" })
     public allowedServices: Service[]
