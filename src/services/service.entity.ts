@@ -1,7 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
+import { CanRead, CanReadPermission } from "src/permission/permission.decorator";
 import { Permission } from "src/permission/permission.entity";
+import { PermissionCatalog } from "src/permission/permission.registry";
 import { BeforeInsert, Column, Entity, OneToMany } from "typeorm";
 
 export class ServiceDTO {
@@ -27,6 +29,7 @@ export class Service extends Account implements ServiceDTO {
     @Column({ length: 120, nullable: true })
     public description?: string;
 
+    @CanReadPermission(PermissionCatalog.SERVICES_READ)
     @Column({ nullable: true, default: true })
     public isListed: boolean;
     
@@ -39,12 +42,15 @@ export class Service extends Account implements ServiceDTO {
     @Column({ nullable: true })
     public iconResourceUri: string;
 
+    @CanRead(false)
     @Column({ unique: true, nullable: false })
     public clientId: string;
 
+    @CanRead(false)
     @Column({ unique: true, nullable: false })
     public clientSecret: string;
 
+    @CanReadPermission(PermissionCatalog.SERVICES_READ)
     @OneToMany(() => Permission, permission => permission.service)
     public permissions: Permission[]
 

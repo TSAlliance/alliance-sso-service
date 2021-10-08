@@ -18,14 +18,12 @@ export class ServiceController {
     @Get()
     @Permission(PermissionCatalog.SERVICES_READ)
     public async findAll(@Pageable() pageable?: Pageable) {
-        // TODO: Show info based on permissions
         return this.serviceService.findAll(pageable);
     }
 
     @Get(":serviceId")
     @Permission(PermissionCatalog.SERVICES_READ)
     public async getService(@Param("serviceId") serviceId: string) {
-        // TODO: Show info based on permissions
         return this.serviceService.findById(serviceId)
     }
 
