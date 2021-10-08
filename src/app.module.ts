@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { CacheModule, Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ValidatorModule } from '@tsalliance/rest';
@@ -18,6 +18,7 @@ import { SubscriberModule } from './events/subscriber.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import path from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { ResponseInterceptor } from './interceptors/response.interceptor';
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
 const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
@@ -80,6 +81,7 @@ const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
     }),
     SubscriberModule
   ],
+  providers: [ ResponseInterceptor ],
   controllers: [],
 })
 export class AppModule implements OnModuleInit {
