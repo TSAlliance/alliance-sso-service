@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
 import { RoleService, ROOT_ROLE_ID } from 'src/roles/role.service';
+import { User } from 'src/users/user.entity';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Invite, InviteDTO } from './invite.entity';
 import { InviteRepository } from './invite.repository';
@@ -30,7 +32,7 @@ export class InviteService {
         return this.inviteRepository.findOne({ where: { id: inviteId }, relations: ["role", "user"]})
     }
 
-    public async createInvite(data: InviteDTO): Promise<Invite> {
+    public async createInvite(data: InviteDTO, account?: Account): Promise<Invite> {
         const validator = new Validator();
         const invite = new Invite();
 
@@ -44,6 +46,7 @@ export class InviteService {
 
         validator.throwErrors();
         invite.asignRole = data.asignRole;
+        invite.inviter = account as User;
         return await this.inviteRepository.save(invite);
     }
 
