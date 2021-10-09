@@ -11,7 +11,11 @@ const portMetric = io.metric({
 })
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    cors: {
+      allowedHeaders: "*"
+    }
+  });
 
   app.useGlobalFilters(new ApiExceptionFilter({ debug: false }));
   app.useGlobalInterceptors(new ResponseInterceptor());
