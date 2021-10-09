@@ -2,8 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import io from "@pm2/io"
-import { ApiExceptionFilter } from '@tsalliance/rest';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
+import { ApiExceptionFilter, ResponseInterceptor } from '@tsalliance/rest';
 
 const portMetric = io.metric({
   id: "app/port",

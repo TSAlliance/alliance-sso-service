@@ -2,9 +2,8 @@ import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException
 import { Reflector } from '@nestjs/core';
 import { AccountNotFoundException, InsufficientPermissionException } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
-import { PERMISSION_KEY } from 'src/permission/permission.decorator';
-import { AUTH_REQUIRED_KEY } from './authentication.decorator';
 import { AuthService } from './authentication.service';
+import { PERMISSION_KEY, AUTH_REQUIRED_KEY } from "@tsalliance/rest"
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthenticationGuard implements CanActivate {

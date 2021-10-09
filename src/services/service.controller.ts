@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Permission } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
-import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { DeleteResult } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
@@ -30,19 +30,19 @@ export class ServiceController {
     @Post()
     @Permission(PermissionCatalog.SERVICES_WRITE)
     public createService(@Body() service: ServiceDTO) {
-        return this.serviceService.createService(service);
+        return this.serviceService.create(service);
     }
 
     @Put(":serviceId")
     @Permission(PermissionCatalog.SERVICES_WRITE)
     public updateService(@Param('serviceId') serviceId: string, @Body() service: ServiceDTO) {
-        return this.serviceService.updateService(serviceId, service);
+        return this.serviceService.update(serviceId, service);
     }
 
     @Delete(":serviceId")
     @Permission(PermissionCatalog.SERVICES_WRITE)
     public deleteService(@Param('serviceId') serviceId: string): Promise<DeleteResult> {
-        return this.serviceService.deleteService(serviceId);
+        return this.serviceService.delete(serviceId);
     }
 
     @Get("/regenerate/:serviceId")

@@ -8,12 +8,10 @@ import { ServiceRepository } from './service.repository';
 const ROOT_SERVICE_ID = "*";
 
 @Injectable()
-export class ServiceService implements RestService<ServiceRepository> {
+export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepository> {
 
-    constructor(private serviceRepository: ServiceRepository){}
-
-    public getRepository(): ServiceRepository {
-        return this.serviceRepository;
+    constructor(private serviceRepository: ServiceRepository){
+        super(serviceRepository)
     }
 
     public async createRootService() {
@@ -51,7 +49,7 @@ export class ServiceService implements RestService<ServiceRepository> {
         return this.findById(ROOT_SERVICE_ID)
     }
 
-    public async createService(data: ServiceDTO): Promise<Service> {    
+    public async create(data: ServiceDTO): Promise<Service> {    
         const validator = new Validator();   
         const service = new Service();
 
@@ -67,7 +65,7 @@ export class ServiceService implements RestService<ServiceRepository> {
         return this.serviceRepository.save(service);
     }
 
-    public async updateService(id: string, data: ServiceDTO): Promise<Service> {
+    public async update(id: string, data: ServiceDTO): Promise<Service> {
         const validator = new Validator();
         const service: Service = await this.findById(id);        
         if(!service) throw new NotFoundException();
@@ -86,6 +84,11 @@ export class ServiceService implements RestService<ServiceRepository> {
         return this.serviceRepository.save(service);
     }
 
+    public async delete(id: string): Promise<DeleteResult> {
+        if(id == ROOT_SERVICE_ID) throw new InsufficientPermissionException();
+        return this.serviceRepository.delete({ id })
+    }
+
     public async regenerateCredentials(id: string): Promise<Service> {
         const service: Service = await this.findById(id);        
         if(!service) throw new NotFoundException();
@@ -95,11 +98,6 @@ export class ServiceService implements RestService<ServiceRepository> {
         service.credentialHash = RandomUtil.randomCredentialHash();
 
         return this.serviceRepository.save(service);
-    }
-
-    public async deleteService(id: string): Promise<DeleteResult> {
-        if(id == ROOT_SERVICE_ID) throw new InsufficientPermissionException();
-        return this.serviceRepository.delete({ id })
     }
 
 }

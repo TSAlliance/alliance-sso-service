@@ -1,23 +1,21 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, Validator } from '@tsalliance/rest';
+import { RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { PasswordService } from 'src/authentication/password.service';
-import { FindManyOptions } from 'typeorm';
+import { DeleteResult, FindManyOptions } from 'typeorm';
 import { MediaService } from '../media/media.service';
 import { User, UserDTO } from './user.entity';
 import { UserRepository } from './user.repository';
 
 @Injectable()
-export class UserService {
+export class UserService extends RestService<User, UserDTO, UserRepository> {
 
     constructor(
         @Inject(forwardRef(() => MediaService)) private mediaService: MediaService,
         private passwordService: PasswordService,
         private userRepository: UserRepository
-    ){}
-
-    public async save(user: User): Promise<User> {
-        return this.userRepository.save(user);
+    ){
+        super(userRepository);
     }
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<User>): Promise<Page<User>> {
@@ -26,12 +24,8 @@ export class UserService {
         return result;
     }
 
-    public async findById(userId: string, withSensitive = false): Promise<User> {
+    public async findById(userId: string): Promise<User> {
         const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role", "role.permissions"]});
-        if(!withSensitive) {
-            return result?.censored();
-        }
-        
         return Object.assign(new User(), result);
     }
 
@@ -60,7 +54,7 @@ export class UserService {
         return result;
     }
 
-    public async createUser(data: UserDTO): Promise<User> {
+    public async create(data: UserDTO): Promise<User> {
         const validator = new Validator();
         const existsByUsername = await this.existsByUsername(data.username);
         const existsByEmail = await this.existsByEmail(data.email);
@@ -92,8 +86,8 @@ export class UserService {
         return result;
     }
 
-    public async updateUser(userId: string, data: UserDTO): Promise<User> {
-        const user: User = await this.findById(userId);
+    public async update(id: string, data: UserDTO): Promise<User> {
+        const user: User = await this.findById(id);
         if(!user) throw new NotFoundException();
 
         const validator = new Validator();
@@ -118,14 +112,22 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    public async deleteUser(userId: string) {
+    public async delete(id: string): Promise<DeleteResult> {
         return this.userRepository.manager.transaction(async () => {
-            const user = await this.findById(userId);
+            const user = await this.findById(id);
             const result = await this.userRepository.delete(user);
 
             this.mediaService.deleteAvatar(user.avatarResourceId)
             return result;
         })
+    }
+
+    public getRepository(): UserRepository {
+        return this.userRepository;
+    }
+
+    public async save(user: User): Promise<User> {
+        return this.userRepository.save(user);
     }
 
     public async existsByUsername(username: string): Promise<boolean> {        

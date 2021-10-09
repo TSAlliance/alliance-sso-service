@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { RandomUtil } from "@tsalliance/rest";
-import { CanReadPermission } from "src/permission/permission.decorator";
+import { CanReadPermission, RandomUtil } from "@tsalliance/rest";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role } from "src/roles/role.entity";
 import { User } from "src/users/user.entity";

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Validator } from '@tsalliance/rest';
+import { RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { Account } from 'src/account/account.entity';
 import { RoleService, ROOT_ROLE_ID } from 'src/roles/role.service';
@@ -9,12 +9,15 @@ import { Invite, InviteDTO } from './invite.entity';
 import { InviteRepository } from './invite.repository';
 
 @Injectable()
-export class InviteService {
+export class InviteService extends RestService<Invite, InviteDTO, InviteRepository> {
+    
 
     constructor(
         private inviteRepository: InviteRepository,
         private roleService: RoleService
-    ){}
+    ){
+        super(inviteRepository)
+    }
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<Invite>): Promise<Page<Invite>> {
         return this.inviteRepository.findAll(pageable, options);
@@ -32,7 +35,7 @@ export class InviteService {
         return this.inviteRepository.findOne({ where: { id: inviteId }, relations: ["role", "user"]})
     }
 
-    public async createInvite(data: InviteDTO, account?: Account): Promise<Invite> {
+    public async create(data: InviteDTO, account?: Account): Promise<Invite> {
         const validator = new Validator();
         const invite = new Invite();
 
@@ -50,7 +53,11 @@ export class InviteService {
         return await this.inviteRepository.save(invite);
     }
 
-    public async deleteInvite(id: string): Promise<DeleteResult> {
+    public async update(): Promise<Invite> {
+        return;
+    }
+
+    public async delete(id: string): Promise<DeleteResult> {
         return this.inviteRepository.delete({ id });
     }
 
@@ -58,7 +65,7 @@ export class InviteService {
         const rootRole = await this.roleService.findRootRole();
 
         if(!await this.findByRoleId(ROOT_ROLE_ID)) {
-            await this.createInvite({
+            await this.create({
                 asignRole: rootRole,
                 maxUses: 1
             })

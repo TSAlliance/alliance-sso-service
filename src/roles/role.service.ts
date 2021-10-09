@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Validator } from '@tsalliance/rest';
+import { RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { PermissionService } from 'src/permission/permission.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
@@ -9,21 +9,18 @@ import { RoleRepository } from './role.repository';
 export const ROOT_ROLE_ID = "*"
 
 @Injectable()
-export class RoleService {
-    constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){}
+export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
+    constructor(private roleRepository: RoleRepository, private permissionService: PermissionService){
+        super(roleRepository)
+    }
 
-    public async findAll(pageable: Pageable, options: FindManyOptions<Role> = {}): Promise<Page<Role>> {
-        if(!options) options = {}
-
+    public async findAll(pageable: Pageable, options?: FindManyOptions<Role>): Promise<Page<Role>> {
         const result = await this.roleRepository.findAll(pageable, options)
         return result
     }
 
-    public async findById(roleId: string, options: FindManyOptions<Role> = {}): Promise<Role> {
-        if(!options) options = {}
-
-        options.where = { id: roleId }
-        const result = await this.roleRepository.findOne(options)
+    public async findById(roleId: string, options?: FindManyOptions<Role>): Promise<Role> {
+        const result = await this.roleRepository.findOne({...options, where: { id: roleId }})
         return result;
     }
 
@@ -55,7 +52,7 @@ export class RoleService {
             .catch(() => { /* Do nothing */ })
     }
 
-    public async createRole(data: RoleDTO): Promise<Role> {
+    public async create(data: RoleDTO): Promise<Role> {
         const validator = new Validator();
         const role = new Role();
         const existsByTitle = !!await this.roleRepository.exists({ title: data.title });
@@ -72,7 +69,7 @@ export class RoleService {
         return this.roleRepository.save(role);
     }
 
-    public async updateRole(roleId: string, data: RoleDTO): Promise<Role> {
+    public async update(roleId: string, data: RoleDTO): Promise<Role> {
         const validator = new Validator()
         const role: Role = await this.findById(roleId);        
         if(!role) throw new NotFoundException();
@@ -90,7 +87,7 @@ export class RoleService {
         return this.roleRepository.save(role);
     }
 
-    public async deleteRole(id: string): Promise<DeleteResult> {
+    public async delete(id: string): Promise<DeleteResult> {
         return this.roleRepository.delete({ id });
     }
 }

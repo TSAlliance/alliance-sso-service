@@ -1,14 +1,13 @@
-import { CacheModule, Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { ValidatorModule } from '@tsalliance/rest';
+import { ResponseInterceptor, ValidatorModule } from '@tsalliance/rest';
 import { ServiceModule } from './services/service.module';
 import { RolesModule } from './roles/role.module';
 import { UsersModule } from './users/user.module';
 import { MediaModule } from './media/media.module';
 import { AuthModule } from './authentication/authentication.module';
 import { InviteModule } from './invite/invite.module';
-import { ProfileModule } from './profile/profile.module';
 import { InviteService } from './invite/invite.service';
 import { RoleService } from './roles/role.service';
 import { ServiceService } from './services/service.service';
@@ -18,7 +17,6 @@ import { SubscriberModule } from './events/subscriber.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import path from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { ResponseInterceptor } from './interceptors/response.interceptor';
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
 const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
@@ -32,7 +30,6 @@ const envFile = ".env" + (isDev ? "." + process.env.NODE_ENV : "")
     MediaModule,
     AuthModule,
     InviteModule, 
-    ProfileModule, 
     MailModule,
     ConfigModule.forRoot(
       {

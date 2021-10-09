@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Permission } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
-import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { RoleDTO } from './role.entity';
 import { RoleService } from './role.service';
@@ -28,19 +28,19 @@ export class RolesController {
     @Post()
     @Permission(PermissionCatalog.ROLES_WRITE)
     public async createRole(@Body() role: RoleDTO) {
-        return this.roleService.createRole(role);
+        return this.roleService.create(role);
     }
 
     @Put(":roleId")
     @Permission(PermissionCatalog.ROLES_WRITE)
     public async updateRole(@Param("roleId") roleId: string, @Body() role: RoleDTO) {
-        return this.roleService.updateRole(roleId, role);
+        return this.roleService.update(roleId, role);
     }
 
     @Delete(":roleId")
     @Permission(PermissionCatalog.ROLES_WRITE)
     public async deleteRole(@Param("roleId") roleId: string) {
-        return this.roleService.deleteRole(roleId);
+        return this.roleService.delete(roleId);
     }
 
 }

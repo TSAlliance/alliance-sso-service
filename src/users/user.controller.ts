@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Permission } from "@tsalliance/rest";
 import { Pageable } from "nestjs-pager";
-import { Permission } from "src/permission/permission.decorator";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { UserDTO } from "./user.entity";
 import { UserService } from "./user.service";
@@ -28,19 +28,19 @@ export class UsersController {
     @Post()
     @Permission(PermissionCatalog.USERS_WRITE)
     public async createUser(@Body() user: UserDTO) {
-        return this.userService.createUser(user);
+        return this.userService.create(user);
     }
 
-    @Put()
+    @Put(":userId")
     @Permission(PermissionCatalog.USERS_WRITE)
-    public async updateUser(@Body() user: UserDTO) {
-        return this.userService.createUser(user);
+    public async updateUser(@Param("userId") userId: string, @Body() user: UserDTO) {
+        return this.userService.update(userId, user);
     }
 
     @Delete(":userId")
     @Permission(PermissionCatalog.USERS_WRITE)
     public async deleteUser(@Param("userId") userId: string) {
-        return this.userService.deleteUser(userId)
+        return this.userService.delete(userId)
     }
 
 

@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Permission, RequireAuth } from '@tsalliance/rest';
+import { Authentication } from '@tsalliance/rest/dist/decorator/authentication.decorator';
 import { Account } from 'src/account/account.entity';
-import { Authentication, RequireAuth } from 'src/authentication/authentication.decorator';
-import { Permission } from './permission.decorator';
 import { PermissionDTO } from './permission.entity';
 import { PermissionCatalog } from './permission.registry';
 import { PermissionService } from './permission.service';

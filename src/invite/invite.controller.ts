@@ -1,9 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
+import { Authentication, Permission } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { Account } from 'src/account/account.entity';
-import { Authentication } from 'src/authentication/authentication.decorator';
-import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { DeleteResult } from 'typeorm';
 import { Invite, InviteDTO } from './invite.entity';
@@ -19,7 +18,7 @@ export class InviteController {
     @ApiBasicAuth()
     @Permission(PermissionCatalog.INVITES_WRITE)
     public async createInvite(@Body() data: InviteDTO, @Authentication() account: Account) {
-        return this.inviteService.createInvite(data, account);
+        return this.inviteService.create(data, account);
     }
 
     @Get()
@@ -38,7 +37,7 @@ export class InviteController {
     @ApiBasicAuth()
     @Permission(PermissionCatalog.INVITES_WRITE)
     public async delete(@Param("inviteId") inviteId: string): Promise<DeleteResult> {
-        return this.inviteService.deleteInvite(inviteId)
+        return this.inviteService.delete(inviteId)
     }
 
 }

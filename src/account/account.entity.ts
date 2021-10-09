@@ -1,4 +1,4 @@
-import { CanRead } from "src/permission/permission.decorator";
+import { CanRead, RestAccount } from "@tsalliance/rest";
 import { Column, CreateDateColumn, PrimaryGeneratedColumn } from "typeorm";
 
 export enum AccountType {
@@ -6,7 +6,7 @@ export enum AccountType {
     SERVICE = "account_service"
 }
 
-export abstract class Account {
+export abstract class Account extends RestAccount {
 
     @PrimaryGeneratedColumn("uuid")
     public id: string;

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CanRead, CanReadPermission } from "src/permission/permission.decorator";
+import { CanReadPermission } from "@tsalliance/rest";
 import { Permission, PermissionDTO } from "src/permission/permission.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";

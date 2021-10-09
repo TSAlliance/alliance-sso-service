@@ -141,7 +141,7 @@ export class AuthService {
         const invite = await this.inviteService.findById(registration.inviteCode, { relations: ["asignRole"] });
         if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException();
 
-        await this.userService.createUser({
+        await this.userService.create({
             email: registration.email,
             username: registration.username,
             password: registration.password,
@@ -151,7 +151,7 @@ export class AuthService {
 
         invite.uses++;
         if(!this.inviteService.isInviteValid(invite)) {
-            await this.inviteService.deleteInvite(invite.id)
+            await this.inviteService.delete(invite.id)
         } else {
             await this.inviteService.save(invite);
         }
@@ -216,7 +216,7 @@ export class AuthService {
         }
 
         // Compare password to verify request
-        const user = await this.userService.findById(userId, true);
+        const user = await this.userService.findById(userId);
         if(!this.passwordService.comparePasswords(data.currentPassword, user.password)) {
             throw new ValidationException([{ fieldname: "currentPassword", errors: [
                     { name: "match", expected: true, found: false }
@@ -234,7 +234,7 @@ export class AuthService {
      * @param password Updated password
      */
     private async updatePassword(userId: string, password: string) {
-        await this.userService.updateUser(userId, {
+        await this.userService.update(userId, {
             email: undefined,
             username: undefined,
             password

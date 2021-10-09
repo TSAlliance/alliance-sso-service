@@ -1,7 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { RandomUtil } from "@tsalliance/rest";
+import { CanRead, CanReadPermission, RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
-import { CanRead, CanReadPermission } from "src/permission/permission.decorator";
 import { Permission } from "src/permission/permission.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { BeforeInsert, Column, Entity, OneToMany } from "typeorm";

@@ -1,7 +1,7 @@
 import { BadRequestException, Controller, Get, Header, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { RequireAuth } from 'src/authentication/authentication.decorator';
+import { RequireAuth } from '@tsalliance/rest';
 import { AvatarUploadDTO } from './media.entity';
 import { MediaService } from './media.service';
 
