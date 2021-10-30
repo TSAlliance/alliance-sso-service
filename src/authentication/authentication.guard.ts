@@ -43,6 +43,8 @@ export class AuthenticationGuard implements CanActivate {
             throw new UnauthorizedException();
           }
         } else {
+          this.translateScopedParam(ctx)
+          
           if(permissionsList) {
             // If there are multiple permissions set, it means OR.
             // So only one permission must be granted to successfully proceed.
