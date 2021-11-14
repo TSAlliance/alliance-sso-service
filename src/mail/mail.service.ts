@@ -22,8 +22,6 @@ export class MailService {
             context: {
                 username: data.token.user.username,
                 code: data.token.code,
-                logoImageData: this.assetUrlToBase64("ts_logo.png"),
-                bannerImageData: this.assetUrlToBase64("access_account_undraw.png")
             },
         });
     }

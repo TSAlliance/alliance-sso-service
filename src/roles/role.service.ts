@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { RestService, Validator } from '@tsalliance/rest';
+import { InsufficientPermissionException, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
 import { PermissionService } from 'src/permission/permission.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
 
 export const ROOT_ROLE_ID = "*"
+export const ROOT_ROLE_HIERARCHY = 1000
 
 @Injectable()
 export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
@@ -33,7 +35,8 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         const role = {
             id: ROOT_ROLE_ID,
             title: "root",
-            description: "Super admin role that has every possible permission."
+            description: "Super admin role that has every possible permission.",
+            hierarchy: ROOT_ROLE_HIERARCHY
         }
         
         await this.roleRepository.manager.createQueryBuilder()
@@ -69,10 +72,14 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return this.roleRepository.save(role);
     }
 
-    public async update(roleId: string, data: RoleDTO): Promise<Role> {
+    public async update(roleId: string, data: RoleDTO, account?: Account): Promise<Role> {
         const validator = new Validator()
         const role: Role = await this.findById(roleId);        
         if(!role) throw new NotFoundException();
+
+        if(roleId == ROOT_ROLE_ID || account && account.getHierarchy() < role.hierarchy) {
+            throw new InsufficientPermissionException();
+        }
 
         if(validator.text("title", data.title).alpha().minLen(3).maxLen(32).check()) {
             role.title = data.title;
@@ -87,7 +94,16 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return this.roleRepository.save(role);
     }
 
-    public async delete(id: string): Promise<DeleteResult> {
-        return this.roleRepository.delete({ id });
+    public async delete(id: string, account?: Account): Promise<DeleteResult> {
+        return this.roleRepository.manager.transaction(async () => {
+            const role = await this.findById(id);
+
+            if(id == ROOT_ROLE_ID || account && account.getHierarchy() < role.hierarchy) {
+                throw new InsufficientPermissionException()
+            }
+            
+            const result = await this.roleRepository.delete(role);
+            return result;
+        })
     }
 }

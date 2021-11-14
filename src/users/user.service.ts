@@ -1,6 +1,7 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { RandomUtil, RestService, Validator } from '@tsalliance/rest';
+import { InsufficientPermissionException, RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
 import { PasswordService } from 'src/authentication/password.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { MediaService } from '../media/media.service';
@@ -86,9 +87,13 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         return result;
     }
 
-    public async update(id: string, data: UserDTO): Promise<User> {
+    public async update(id: string, data: UserDTO, account?: Account): Promise<User> {
         const user: User = await this.findById(id);
         if(!user) throw new NotFoundException();
+
+        if(account && account.getHierarchy() < user.getHierarchy()) {
+            throw new InsufficientPermissionException()
+        }
 
         const validator = new Validator();
         const existsByUsername = await this.existsByUsername(data.username);
@@ -112,9 +117,14 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         return this.userRepository.save(user);
     }
 
-    public async delete(id: string): Promise<DeleteResult> {
+    public async delete(id: string, account?: Account): Promise<DeleteResult> {
         return this.userRepository.manager.transaction(async () => {
             const user = await this.findById(id);
+
+            if(account && account.getHierarchy() < user.getHierarchy()) {
+                throw new InsufficientPermissionException()
+            }
+            
             const result = await this.userRepository.delete(user);
 
             this.mediaService.deleteAvatar(user.avatarResourceId)

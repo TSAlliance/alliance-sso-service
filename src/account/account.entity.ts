@@ -23,4 +23,5 @@ export abstract class Account extends RestAccount {
     public credentialHash: string;
 
     public abstract hasPermission(permission: string): boolean;
+    public abstract getHierarchy(): number;
 }

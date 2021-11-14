@@ -12,7 +12,10 @@ export class RoleDTO {
     description?: string;
 
     @ApiProperty({ required: false, default: [], isArray: true, type: () => PermissionDTO })
-    permissions?: Permission[]
+    permissions?: Permission[];
+
+    @ApiProperty({ required: false, default: 0, maximum: 999, minimum: 0 })
+    hierarchy?: number;
 }
 
 @Entity()
@@ -32,5 +35,9 @@ export class Role {
     @ManyToMany(() => Permission)
     @JoinTable({ name: "role_permissions" })
     public permissions: Permission[]
+
+    @CanReadPermission(PermissionCatalog.ROLES_READ)
+    @Column({ nullable: false, default: 0 })
+    public hierarchy: number;
 
 }

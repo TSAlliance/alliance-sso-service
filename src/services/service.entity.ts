@@ -58,6 +58,10 @@ export class Service extends Account implements ServiceDTO {
         return true;
     }
 
+    public getHierarchy(): number {
+        return 999;
+    }
+
     @BeforeInsert()
     public populateClientCredentials() {
         this.accountType = AccountType.SERVICE;

@@ -22,16 +22,15 @@
     <mj-body background-color="#222831" width="600px">
         <mj-section full-width="full-width">
                 <mj-column width="100%">
-                    <mj-image src="{{logoImageData}}" alt=""
-                        align="center" height="50px"></mj-image>
+                    <mj-image src="https://raw.githubusercontent.com/z3ttee/alliance-assets/master/seasonal-logo/summer/logo_summer_default.png" alt=""
+                        align="center" height="50px" width="50px"></mj-image>
                     </mj-text>
                 </mj-column>
         </mj-section>
         <mj-wrapper background-color="#3d4550" padding="0px" border-radius="8px">
             <mj-section padding="20px">
                 <mj-column width="100%" background-color="#29303b" border-radius="8px" padding="20px">
-                    <mj-image src="{{bannerImageData}}" height="200px" alt="" padding="0px"
-                        href="https://google.com"></mj-image>
+                    <mj-image src="https://raw.githubusercontent.com/z3ttee/alliance-assets/master/mail/access_account_undraw.png" height="200px" width="200px" alt="" padding="0px"></mj-image>
                 </mj-column>
             </mj-section>
             <mj-section padding="0px">

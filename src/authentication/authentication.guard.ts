@@ -43,9 +43,9 @@ export class AuthenticationGuard implements CanActivate {
             throw new UnauthorizedException();
           }
         } else {
-          this.translateScopedParam(ctx)
+          const didIncludeScope = this.translateScopedParam(ctx)
           
-          if(permissionsList) {
+          if(permissionsList && !didIncludeScope) {
             // If there are multiple permissions set, it means OR.
             // So only one permission must be granted to successfully proceed.
             const permissionGranted = !!permissionsList.find((permission) => account.hasPermission(permission));

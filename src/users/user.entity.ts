@@ -67,6 +67,10 @@ export class User extends Account {
         return false;
     }
 
+    public getHierarchy(): number {
+        return this.role?.hierarchy || 0;
+    }
+
     @BeforeInsert()
     public insertHook() {
         this.accountType = AccountType.USER;
