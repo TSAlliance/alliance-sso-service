@@ -21,6 +21,8 @@ export class RoleDTO {
 @Entity()
 export class Role {
 
+    // TODO: Error is thrown when creating role. Investigation needed
+
     @PrimaryGeneratedColumn("uuid")
     public id: string;
 

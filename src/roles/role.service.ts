@@ -56,6 +56,8 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
     }
 
     public async create(data: RoleDTO): Promise<Role> {
+        console.log(data);
+
         const validator = new Validator();
         const role = new Role();
         const existsByTitle = !!await this.roleRepository.exists({ title: data.title });
@@ -63,6 +65,9 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         validator.text("title", data.title).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByTitle).check();
         if(validator.text("description", data.description).notBlank().minLen(3).maxLen(120).check()) {
             role.description = data.description;
+        }
+        if(validator.number("hierarchy", data.hierarchy).min(0).max(999).check()) {
+            role.hierarchy = data.hierarchy;
         }
         
         validator.throwErrors();
@@ -87,6 +92,9 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         if(validator.text("description", data.description).minLen(3).maxLen(120).check()) {
             role.description = data.description;
         }
+        if(validator.number("hierarchy", data.hierarchy).min(0).max(999).check()) {
+            role.hierarchy = data.hierarchy;
+        }
 
         validator.throwErrors();
         
@@ -98,11 +106,10 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return this.roleRepository.manager.transaction(async () => {
             const role = await this.findById(id);
 
-            if(id == ROOT_ROLE_ID || account && account.getHierarchy() < role.hierarchy) {
-                throw new InsufficientPermissionException()
-            }
+            if(!role) throw new NotFoundException();
+            if(id == ROOT_ROLE_ID || account && account.getHierarchy() < role?.hierarchy) throw new InsufficientPermissionException()
             
-            const result = await this.roleRepository.delete(role);
+            const result = await this.roleRepository.delete({ id });
             return result;
         })
     }
