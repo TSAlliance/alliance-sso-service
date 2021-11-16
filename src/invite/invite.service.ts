@@ -28,7 +28,7 @@ export class InviteService extends RestService<Invite, InviteDTO, InviteReposito
     }
 
     public async findByRoleId(roleId: string): Promise<Invite> {
-        return this.inviteRepository.findOne({ asignRole: { id: roleId }})
+        return this.inviteRepository.findOne({ assignRole: { id: roleId }})
     }
 
     public async getInvite(inviteId: string): Promise<Invite> {
@@ -48,7 +48,7 @@ export class InviteService extends RestService<Invite, InviteDTO, InviteReposito
         }
 
         validator.throwErrors();
-        invite.asignRole = data.asignRole;
+        invite.assignRole = data.assignRole;
         invite.inviter = account as User;
         return await this.inviteRepository.save(invite);
     }
@@ -66,7 +66,7 @@ export class InviteService extends RestService<Invite, InviteDTO, InviteReposito
 
         if(!await this.findByRoleId(ROOT_ROLE_ID)) {
             await this.create({
-                asignRole: rootRole,
+                assignRole: rootRole,
                 maxUses: 1
             })
         }

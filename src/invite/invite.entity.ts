@@ -13,7 +13,7 @@ export class InviteDTO {
     maxUses?: number;
 
     @ApiProperty({ required: false })
-    asignRole?: Role
+    assignRole?: Role
 }
 
 @Entity()
@@ -42,7 +42,7 @@ export class Invite implements InviteDTO {
     public inviter: User;
 
     @ManyToOne(() => Role, { nullable: true, onDelete: "CASCADE" })
-    public asignRole: Role;
+    public assignRole: Role;
 
     @BeforeInsert()
     public populateCode() {

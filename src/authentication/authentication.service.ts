@@ -146,7 +146,7 @@ export class AuthService {
             username: registration.username,
             password: registration.password,
             discordId: registration.discordId,
-            role: invite.asignRole
+            role: invite.assignRole
         });
 
         invite.uses++;
