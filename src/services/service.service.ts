@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InsufficientPermissionException, RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
+import { ServiceRedirectUri } from './redirect.entity';
 import { Service, ServiceDTO } from './service.entity';
 import { ServiceRepository } from './service.repository';
 
@@ -37,6 +38,10 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
         return this.serviceRepository.findOne({ where: { id: serviceId } })
     }
 
+    public async findByClientId(clientId: string): Promise<Service> {
+        return this.serviceRepository.findOne({ where: { clientId } })
+    }
+
     public async findByIdOrFail(serviceId: string): Promise<Service> {
         return this.serviceRepository.findOneOrFail({ where: { id: serviceId } })
     }
@@ -57,11 +62,16 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
         if(validator.text("description", data.description).minLen(3).maxLen(120).check()) {
             service.description = data.description;
         }
-        
+        if(validator.hexColor("accentColor", data.accentColor).check()) {
+            service.accentColor = data.accentColor
+        }
+
+        const uris: ServiceRedirectUri[] = data.redirectUris?.filter((uriData) => validator.url("redirectUris", uriData.uri).check());
         validator.throwErrors();
 
         service.title = data.title;
         service.isListed = data.isListed;
+        service.redirectUris = uris;
         return this.serviceRepository.save(service);
     }
 
@@ -73,14 +83,18 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
         if(validator.text("title", data.title).minLen(3).maxLen(32).check()) {
             service.title = data.title;
         }
-
         if(validator.text("description", data.description).minLen(3).maxLen(120).check()) {
             service.description = data.description;
         }
+        if(validator.hexColor("accentColor", data.accentColor).check()) {
+            service.accentColor = data.accentColor
+        }
+
+        const uris: ServiceRedirectUri[] = data.redirectUris?.filter((uriData) => validator.url("redirectUris", uriData.uri).check());
 
         validator.throwErrors();
         service.isListed = data.isListed;
-
+        // TODO: service.redirectUris = uris;
         return this.serviceRepository.save(service);
     }
 

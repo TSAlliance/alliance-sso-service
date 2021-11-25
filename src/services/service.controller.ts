@@ -27,6 +27,12 @@ export class ServiceController {
         return this.serviceService.findById(serviceId)
     }
 
+    @Get("/byClientId/:clientId")
+    public async findByClientId(@Param("clientId") clientId: string) {
+        return this.serviceService.findByClientId(clientId)
+    }
+
+
     @Post()
     @Permission(PermissionCatalog.SERVICES_WRITE)
     public createService(@Body() service: ServiceDTO) {

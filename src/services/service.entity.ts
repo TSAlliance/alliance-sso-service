@@ -1,9 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CanRead, CanReadPermission, RandomUtil } from "@tsalliance/rest";
+import { CanReadPermission, RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
 import { Permission } from "src/permission/permission.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { BeforeInsert, Column, Entity, OneToMany } from "typeorm";
+import { ServiceRedirectUri } from "./redirect.entity";
 
 export class ServiceDTO {
     @ApiProperty()
@@ -17,6 +18,9 @@ export class ServiceDTO {
 
     @ApiProperty({ required: false })
     accentColor?: string
+
+    @ApiProperty({ required: false, default: [], isArray: true, type: () => ServiceRedirectUri })
+    redirectUris?: ServiceRedirectUri[];
 }
 
 @Entity()
@@ -32,7 +36,7 @@ export class Service extends Account implements ServiceDTO {
     @Column({ nullable: true, default: true })
     public isListed: boolean;
     
-    @Column({ nullable: true })
+    @Column({ nullable: true, default: "#AA5151" })
     public accentColor?: string;
     
     @Column({ nullable: true })
@@ -41,13 +45,17 @@ export class Service extends Account implements ServiceDTO {
     @Column({ nullable: true })
     public iconResourceUri: string;
 
-    @CanRead(false)
+    @CanReadPermission(PermissionCatalog.SERVICES_READ)
     @Column({ unique: true, nullable: false })
     public clientId: string;
 
-    @CanRead(false)
+    @CanReadPermission(PermissionCatalog.SERVICES_READ)
     @Column({ unique: true, nullable: false })
     public clientSecret: string;
+
+    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @OneToMany(() => ServiceRedirectUri, uri => uri.service, { cascade: true })
+    public redirectUris: ServiceRedirectUri[];
 
     @CanReadPermission(PermissionCatalog.SERVICES_READ)
     @OneToMany(() => Permission, permission => permission.service)

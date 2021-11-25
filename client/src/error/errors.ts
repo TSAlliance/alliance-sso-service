@@ -29,3 +29,9 @@ export class SSOInsufficientPermissionError extends ApiError {
         super("Insufficient permission.", "INSUFFICIENT_PERMISSION", { statusCode: 403, isCritical: true });
     }
 }
+
+export class SSOInvalidRedirectUriError extends ApiError {
+    constructor() {
+        super("Invalid redirect_uri.", "INVALID_REDIRECT", { statusCode: 400, isCritical: false });
+    }
+}
