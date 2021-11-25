@@ -32,6 +32,11 @@ export class CredentialsDTO {
     stayLoggedIn?: boolean;
 }
 
+export class AuthorizeDTO {
+    client_id: string;
+    redirect_uri: string;
+}
+
 export class RegistrationDTO {
 
     @ApiProperty({ required: true })

@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { ChangePasswordDTO, CredentialsDTO, JwtResponseDTO, RecoveryDTO, RegistrationDTO, RequestRecoveryDTO } from './authentication.entity';
+import { AuthorizeDTO, ChangePasswordDTO, CredentialsDTO, JwtResponseDTO, RecoveryDTO, RegistrationDTO, RequestRecoveryDTO } from './authentication.entity';
 import { AuthService } from './authentication.service';
 
 @Controller('authentication')
@@ -33,6 +33,11 @@ export class AuthController {
     @Post("authenticate")
     public async authenticate(@Body() credentials: CredentialsDTO): Promise<JwtResponseDTO> {
         return this.authService.signInWithCredentials(credentials);
+    }
+
+    @Post("authorize")
+    public async authorize(@Body() authorize: AuthorizeDTO): Promise<void> {
+        return this.authService.authorize(authorize);
     }
 
 }

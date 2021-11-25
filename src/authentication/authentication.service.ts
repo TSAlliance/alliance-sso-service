@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtDTO, JwtResponseDTO, CredentialsDTO, RegistrationDTO, RequestRecoveryDTO, RecoveryDTO, AccountRecoveryToken, ChangePasswordDTO } from './authentication.entity';
+import { JwtDTO, JwtResponseDTO, CredentialsDTO, RegistrationDTO, RequestRecoveryDTO, RecoveryDTO, AccountRecoveryToken, ChangePasswordDTO, AuthorizeDTO } from './authentication.entity';
 import { AccountType } from 'src/account/account.entity';
 import { ServiceService } from '../services/service.service';
 import { UserService } from 'src/users/user.service';
@@ -12,7 +12,7 @@ import { InviteService } from 'src/invite/invite.service';
 import { Service } from 'src/services/service.entity';
 import { DeleteResult } from 'typeorm';
 import { MailService } from 'src/mail/mail.service';
-import { SSOAccountMissingError } from "client/src/error/errors"
+import { SSOAccountMissingError, SSOInvalidRedirectUriError } from "client/src/error/errors"
 
 @Injectable()
 export class AuthService {
@@ -73,6 +73,21 @@ export class AuthService {
         }
 
         return this.authorizeDecodedToken(decoded);
+    }
+
+    /**
+     * Validate if redirect after login is allowed and if redirect uris match
+     * @param token JWT encoded as string.
+     * @returns Account object
+     */
+     public async authorize(authorizeData: AuthorizeDTO): Promise<void> {
+        const service = await this.serviceService.getRepository().findOne({ where: { clientId: authorizeData.client_id }, relations: ["redirectUris"] });
+        if(!service) throw new NotFoundException();
+        if(!service.redirectUris.map((uri) => uri.uri).includes(authorizeData.redirect_uri)) {
+            throw new SSOInvalidRedirectUriError();
+        }
+
+        return;
     }
 
     /**
