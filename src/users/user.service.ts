@@ -62,7 +62,8 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
 
         validator.text("username", data.username).alphaNum().minLen(3).maxLen(32).required().unique(() => existsByUsername).check();
         validator.email("email", data.email).required().unique(() => existsByEmail).check();
-        validator.password("password", data.password).required().check();
+        // validator.password("password", data.password).required().check();
+        validator.text("password", data.password).minLen(3).notBlank().required().check();
         validator.throwErrors();
 
         const user = new User();
@@ -105,7 +106,8 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         if(validator.email("email", data.username).unique(() => existsByEmail).check()) {
             user.email = data.email;
         }
-        if(data.password && validator.password("password", data.password).check()) {
+
+        if(validator.text("password", data.password).minLen(3).notBlank().check()) {
             user.password = this.passwordService.encodePassword(data.password);
             user.credentialHash = RandomUtil.randomCredentialHash()
         }
