@@ -8,7 +8,7 @@ import { Invite } from './entities/invite.entity';
 import { Authentication, CanAccess, RestAccount } from "@tsalliance/rest"
 import { PermissionCatalog } from 'src/permission/permission.registry';
 
-@Controller('invite')
+@Controller('invites')
 export class InviteController {
     constructor(private readonly inviteService: InviteService) {}
 

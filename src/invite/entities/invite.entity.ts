@@ -2,8 +2,9 @@ import { CanRead, RandomUtil } from "@tsalliance/rest";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role } from "src/roles/role.entity";
 import { User } from "src/users/user.entity";
-import { BeforeInsert, Column, CreateDateColumn, ManyToOne, PrimaryColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn } from "typeorm";
 
+@Entity()
 export class Invite {
     @PrimaryColumn("varchar", { length: 6 })
     public id: string;
