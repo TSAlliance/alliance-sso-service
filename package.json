@@ -26,7 +26,7 @@
     "@nestjs/swagger": "^5.0.9",
     "@nestjs/typeorm": "^8.0.2",
     "@pm2/io": "^5.0.0",
-    "@tsalliance/rest": "^2.0.56",
+    "@tsalliance/rest": "^2.0.59",
     "bcrypt": "^5.0.1",
     "handlebars": "^4.7.7",
     "mysql2": "^2.2.5",

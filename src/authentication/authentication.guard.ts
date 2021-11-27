@@ -1,9 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AccountNotFoundException, InsufficientPermissionException } from '@tsalliance/rest';
+import { AccountNotFoundException, InsufficientPermissionException, PROPERTY_PERMISSION_META_KEY } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
 import { AuthService } from './authentication.service';
-import { PERMISSION_KEY, AUTH_REQUIRED_KEY } from "@tsalliance/rest"
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthenticationGuard implements CanActivate {
@@ -13,14 +12,14 @@ export class AuthenticationGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean | Promise < boolean > | Observable < boolean > {
     return new Promise(async (resolve, reject) => {
       try {
-        const permissionsList: string[] = this.reflector.get<string[]>(PERMISSION_KEY, ctx.getHandler());
-        const requiresAuth: boolean = this.reflector.get<boolean>(AUTH_REQUIRED_KEY, ctx.getHandler()) || !!permissionsList;
+        const requiredPermissions: string[] = this.reflector.get<string[]>(PROPERTY_PERMISSION_META_KEY, ctx.getHandler());
+        const hasPermissions: boolean = requiredPermissions?.length > 0;
         const headers: any = ctx.switchToHttp().getRequest().headers;
         const authHeaderValue: string = headers["authorization"]
 
         // If no header exists and authentication is needed 
         // ==> throw unauthorized
-        if(!authHeaderValue && requiresAuth) {
+        if(!authHeaderValue && hasPermissions) {
           throw new UnauthorizedException()
         }
 
@@ -37,7 +36,7 @@ export class AuthenticationGuard implements CanActivate {
         // If account is null but authentication is required
         // ==> throw AccountNotFoundError
         if(!account) {
-          if(requiresAuth) {
+          if(hasPermissions) {
             throw new AccountNotFoundException();
           } else if(this.translateScopedParam(ctx)) {
             throw new UnauthorizedException();
@@ -45,10 +44,10 @@ export class AuthenticationGuard implements CanActivate {
         } else {
           const didIncludeScope = this.translateScopedParam(ctx)
           
-          if(permissionsList && !didIncludeScope) {
+          if(requiredPermissions?.length > 0 && !didIncludeScope) {
             // If there are multiple permissions set, it means OR.
             // So only one permission must be granted to successfully proceed.
-            const permissionGranted = !!permissionsList.find((permission) => account.hasPermission(permission));
+            const permissionGranted = !!requiredPermissions.find((permission) => account.hasPermission(permission));
 
             if(!permissionGranted) {
               throw new InsufficientPermissionException();

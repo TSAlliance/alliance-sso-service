@@ -1,43 +1,43 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
-import { Authentication, Permission } from '@tsalliance/rest';
-import { Page, Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
-import { PermissionCatalog } from 'src/permission/permission.registry';
-import { DeleteResult } from 'typeorm';
-import { Invite, InviteDTO } from './invite.entity';
+import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
 import { InviteService } from './invite.service';
+import { CreateInviteDto } from './dto/create-invite.dto';
+import { UpdateInviteDto } from './dto/update-invite.dto';
+import { Page, Pageable } from 'nestjs-pager';
+import { Invite } from './entities/invite.entity';
 
-@ApiTags("Invite Controller")
-@Controller('invites')
+import { Authentication, CanAccess, RestAccount } from "@tsalliance/rest"
+import { PermissionCatalog } from 'src/permission/permission.registry';
+
+@Controller('invite')
 export class InviteController {
-
-    constructor(private inviteService: InviteService){}
-
-    @Post()
-    @ApiBasicAuth()
-    @Permission(PermissionCatalog.INVITES_WRITE)
-    public async createInvite(@Body() data: InviteDTO, @Authentication() account: Account) {
-        return this.inviteService.create(data, account);
-    }
+    constructor(private readonly inviteService: InviteService) {}
 
     @Get()
-    @ApiBasicAuth()
-    @Permission(PermissionCatalog.INVITES_READ)
-    public async findAll(@Pageable() pageable: Pageable): Promise<Page<Invite>> {
-        return this.inviteService.findAll(pageable, {  })
+    @CanAccess([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
+    public async findAll(@Pageable() pageable: Pageable): Promise <Page<Invite>> {
+        return this.inviteService.findAll(pageable)
     }
 
-    @Get(":inviteId")
-    public async findById(@Param("inviteId") inviteId: string): Promise<Invite> {
-        return this.inviteService.findById(inviteId)
+    @Post()
+    @CanAccess(PermissionCatalog.INVITES_WRITE)
+    public create(@Body() createInviteDto: CreateInviteDto, @Authentication() authentication: RestAccount) {
+        return this.inviteService.create(createInviteDto, authentication);
     }
 
-    @Delete(":inviteId")
-    @ApiBasicAuth()
-    @Permission(PermissionCatalog.INVITES_WRITE)
-    public async delete(@Param("inviteId") inviteId: string): Promise<DeleteResult> {
-        return this.inviteService.delete(inviteId)
+    @Get(':id')
+    public findOne(@Param('id') id: string) {
+        return this.inviteService.findById(id);
     }
 
+    @Put(':id')
+    @CanAccess(PermissionCatalog.INVITES_WRITE)
+    public update(@Param('id') id: string, @Body() updateInviteDto: UpdateInviteDto) {
+        return this.inviteService.update(id, updateInviteDto);
+    }
+
+    @Delete(':id')
+    @CanAccess(PermissionCatalog.INVITES_WRITE)
+    public remove(@Param('id') id: string) {
+        return this.inviteService.delete(id);
+    }
 }

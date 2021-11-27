@@ -1,88 +1,108 @@
 import { Injectable } from '@nestjs/common';
-import { RestService, Validator } from '@tsalliance/rest';
+import { RestAccount } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
 import { RoleService, ROOT_ROLE_ID } from 'src/roles/role.service';
 import { User } from 'src/users/user.entity';
-import { DeleteResult, FindManyOptions } from 'typeorm';
-import { Invite, InviteDTO } from './invite.entity';
+import { UserService } from 'src/users/user.service';
+import { DeleteResult, UpdateResult } from 'typeorm';
+import { CreateInviteDto } from './dto/create-invite.dto';
+import { UpdateInviteDto } from './dto/update-invite.dto';
+import { Invite } from './entities/invite.entity';
 import { InviteRepository } from './invite.repository';
 
 @Injectable()
-export class InviteService extends RestService<Invite, InviteDTO, InviteRepository> {
-    
+export class InviteService {
 
-    constructor(
-        private inviteRepository: InviteRepository,
-        private roleService: RoleService
-    ){
-        super(inviteRepository)
+  constructor(private inviteRepository: InviteRepository, private roleService: RoleService, private userService: UserService){ }
+
+  /**
+   * Create new invite.
+   * @param createInviteDto Invite data to create 
+   * @param account Current account that performs request (will be set as inviter)
+   * @returns Invite Entity
+   */
+  public async create(createInviteDto: CreateInviteDto, account: RestAccount): Promise<Invite> {    
+    createInviteDto.inviter = account as User;
+    return await this.inviteRepository.save(createInviteDto);
+  }
+
+  /**
+   * Find a page of invites.
+   * @param pageable Define page size and current page index number (begins with 0)
+   * @returns Page of type Invite
+   */
+  public async findAll(pageable?: Pageable): Promise<Page<Invite>> {
+    return this.inviteRepository.findAll(pageable);
+  }
+
+  /**
+   * Find an invite by its id.
+   * @param id ID of the invite
+   * @returns Invite Entity or null
+   */
+  public async findById(id: string): Promise<Invite> {
+    return this.inviteRepository.findById(id);
+  }
+
+  /**
+   * Find an invite by its id. Including all related data like inviter and the role to assign after usage.
+   * @param id ID of the invite
+   * @returns Invite Entity or null
+   */
+  public async findByIdIncludingRelations(id: string): Promise<Invite> {
+    return this.inviteRepository.findOne({ where: { id }, relations: ["assignRole", "inviter"]})
+  }
+
+  /**
+   * Update existing invite.
+   * @param id Invites ID
+   * @param updateInviteDto Updated invite data 
+   * @returns UpdateResult
+   */
+  public async update(id: string, updateInviteDto: UpdateInviteDto): Promise<UpdateResult> {
+    return this.inviteRepository.update(id, updateInviteDto)
+  }
+
+  /**
+   * Delete an invite
+   * @param id Id of invite
+   * @returns DeleteResult
+   */
+  public async delete(id: string): Promise<DeleteResult> {
+    return this.inviteRepository.delete(id);
+  }
+
+  /**
+   * Check if an invite is still valid.
+   * @param invite Invite data to check
+   * @returns True or False
+   */
+  public isInviteValid(invite: Invite): boolean {
+    return invite.uses < invite.maxUses || (invite.expiresAt && invite.expiresAt.getTime() <= Date.now())
+  }
+
+  /**
+   * Find id by role
+   * @param roleId Role id to lookup
+   * @returns Invite Entity
+   */
+  public async findByRoleId(roleId: string): Promise<Invite> {
+    return this.inviteRepository.findOne({ assignRole: { id: roleId }})
+  }
+
+  /**
+   * Create default invite code for setup
+   */
+  public async createDefaultInvite() {
+    const rootRole = await this.roleService.findRootRole();
+
+    if((await this.userService.findByRoleId(ROOT_ROLE_ID)).length <= 0) {
+        await this.create({
+            assignRole: rootRole,
+            maxUses: 1
+        }, undefined)
     }
+  }
 
-    public async findAll(pageable: Pageable, options?: FindManyOptions<Invite>): Promise<Page<Invite>> {
-        return this.inviteRepository.findAll(pageable, options);
-    }
-
-    public async findById(inviteId: string, options?: FindManyOptions<Invite>): Promise<Invite> {
-        return this.inviteRepository.findById(inviteId, options)
-    }
-
-    public async findByRoleId(roleId: string): Promise<Invite> {
-        return this.inviteRepository.findOne({ assignRole: { id: roleId }})
-    }
-
-    public async getInvite(inviteId: string): Promise<Invite> {
-        return this.inviteRepository.findOne({ where: { id: inviteId }, relations: ["role", "user"]})
-    }
-
-    public async create(data: InviteDTO, account?: Account): Promise<Invite> {
-        const validator = new Validator();
-        const invite = new Invite();
-
-        if(validator.number("maxUses", data.maxUses).min(1).max(120).check()) {
-            invite.maxUses = data.maxUses;
-        }
-
-        if(validator.date("expiresAt", data.expiresAt?.toString()).after(new Date()).check()) {
-            invite.expiresAt = data.expiresAt;
-        }
-
-        validator.throwErrors();
-        invite.assignRole = data.assignRole;
-        invite.inviter = account as User;
-        return await this.inviteRepository.save(invite);
-    }
-
-    public async update(): Promise<Invite> {
-        return;
-    }
-
-    public async delete(id: string): Promise<DeleteResult> {
-        return this.inviteRepository.delete({ id });
-    }
-
-    public async createDefaultInvite() {
-        const rootRole = await this.roleService.findRootRole();
-
-        if(!await this.findByRoleId(ROOT_ROLE_ID)) {
-            await this.create({
-                assignRole: rootRole,
-                maxUses: 1
-            })
-        }
-    }
-
-    public async save(invite: Invite): Promise<Invite> {
-        return this.inviteRepository.save(invite)
-    }
-
-    /**
-     * Check if an invite is still valid.
-     * @param invite Invite data to check
-     * @returns True or False
-     */
-     public isInviteValid(invite: Invite): boolean {
-        return invite.uses < invite.maxUses || (invite.expiresAt && invite.expiresAt.getTime() <= Date.now())
-    }
-
+  
 }

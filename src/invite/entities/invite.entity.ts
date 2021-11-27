@@ -1,40 +1,30 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { CanReadPermission, RandomUtil } from "@tsalliance/rest";
+import { CanRead, RandomUtil } from "@tsalliance/rest";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role } from "src/roles/role.entity";
 import { User } from "src/users/user.entity";
-import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, ManyToOne, PrimaryColumn } from "typeorm";
 
-export class InviteDTO {
-    @ApiProperty({ required: false })
-    expiresAt?: Date;
-
-    @ApiProperty({ required: false, default: 0 })
-    maxUses?: number;
-
-    @ApiProperty({ required: false })
-    assignRole?: Role
-}
-
-@Entity()
-export class Invite implements InviteDTO {
-
+export class Invite {
     @PrimaryColumn("varchar", { length: 6 })
     public id: string;
 
-    @CanReadPermission(PermissionCatalog.INVITES_READ)
+    @CanRead([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
     @Column({ nullable: false, default: 0 })
     public maxUses: number;
 
-    @CanReadPermission(PermissionCatalog.INVITES_READ)
+    @CanRead([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
     @Column({ nullable: false, default: 0 })
     public uses: number;
 
-    @CanReadPermission(PermissionCatalog.INVITES_READ)
+    @CanRead([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
     @CreateDateColumn()
     public createdAt: Date;
 
-    @CanReadPermission(PermissionCatalog.INVITES_READ)
+    @CanRead([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
+    @CreateDateColumn()
+    public updatedAt: Date;
+
+    @CanRead([PermissionCatalog.INVITES_READ, PermissionCatalog.INVITES_WRITE])
     @Column({ nullable: true })
     public expiresAt?: Date;
 

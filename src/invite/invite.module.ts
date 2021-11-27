@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
 import { InviteService } from './invite.service';
 import { InviteController } from './invite.controller';
+import { RolesModule } from 'src/roles/role.module';
+import { UsersModule } from 'src/users/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { InviteRepository } from './invite.repository';
-import { RolesModule } from 'src/roles/role.module';
 
 @Module({
-  providers: [InviteService],
   controllers: [InviteController],
+  providers: [InviteService],
   imports: [
     RolesModule,
-    TypeOrmModule.forFeature([ InviteRepository ])
+    UsersModule,
+    TypeOrmModule.forFeature([InviteRepository])
   ],
   exports: [
     InviteService

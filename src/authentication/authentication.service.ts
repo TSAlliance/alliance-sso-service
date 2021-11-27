@@ -32,14 +32,14 @@ export class AuthService {
 
         if(credentials.accountType == AccountType.USER) {
             // Login as user
-            account = await this.userService.findByEmailOrUsername(credentials.identifier, credentials.identifier, true);
+            account = await this.userService.findByEmailOrUsername(credentials.identifier, credentials.identifier);
             if(!account) throw new NotFoundException();
 
             if(!this.passwordService.comparePasswords(credentials.password, (account as User).password)) {
                 throw new CredentialsMismatchException();
             }
 
-            account = (account as User).censored();
+            account = (account as User)
             account.accountType = AccountType.USER;
         } else {
             // Login as service
@@ -153,7 +153,7 @@ export class AuthService {
      * @param registration Registration Data 
      */
     public async register(registration: RegistrationDTO) {   
-        const invite = await this.inviteService.findById(registration.inviteCode, { relations: ["asignRole"] });
+        const invite = await this.inviteService.findByIdIncludingRelations(registration.inviteCode);
         if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException();
 
         await this.userService.create({
@@ -168,7 +168,7 @@ export class AuthService {
         if(!this.inviteService.isInviteValid(invite)) {
             await this.inviteService.delete(invite.id)
         } else {
-            await this.inviteService.save(invite);
+            await this.inviteService.update(invite.id, invite);
         }
     }
 

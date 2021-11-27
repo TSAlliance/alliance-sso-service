@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CanReadPermission, RandomUtil } from "@tsalliance/rest";
+import { CanRead, RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
 import { Permission } from "src/permission/permission.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
@@ -32,7 +32,7 @@ export class Service extends Account implements ServiceDTO {
     @Column({ length: 120, nullable: true })
     public description?: string;
 
-    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @Column({ nullable: true, default: true })
     public isListed: boolean;
     
@@ -45,19 +45,19 @@ export class Service extends Account implements ServiceDTO {
     @Column({ nullable: true })
     public iconResourceUri: string;
 
-    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @Column({ unique: true, nullable: false })
     public clientId: string;
 
-    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @Column({ unique: true, nullable: false })
     public clientSecret: string;
 
-    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @OneToMany(() => ServiceRedirectUri, uri => uri.service, { cascade: true })
     public redirectUris: ServiceRedirectUri[];
 
-    @CanReadPermission(PermissionCatalog.SERVICES_READ)
+    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @OneToMany(() => Permission, permission => permission.service)
     public permissions: Permission[]
 

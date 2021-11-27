@@ -1,5 +1,6 @@
+import { IPermission } from "@tsalliance/rest";
 
-export interface PermissionItem {
+export class PermissionItem implements IPermission {
     value: string;
     title: string;
 }

@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Permission, RequireAuth } from '@tsalliance/rest';
+import { CanAccess, IsAuthenticated } from '@tsalliance/rest';
 import { Authentication } from '@tsalliance/rest/dist/decorator/authentication.decorator';
 import { Account } from 'src/account/account.entity';
 import { PermissionDTO } from './permission.entity';
@@ -22,13 +22,13 @@ export class PermissionController {
         type: () => PermissionDTO,
         required: true
     })
-    @RequireAuth()
+    @IsAuthenticated()
     public async registerPermissions(@Body() permissions: PermissionDTO[], @Authentication() account: Account) {
         return this.permissionService.registerPermissionsForService(account.id, permissions);
     }
 
     @Get("/categorized")
-    @Permission(PermissionCatalog.PERMISSIONS_READ)
+    @CanAccess([PermissionCatalog.PERMISSIONS_READ])
     public async findAllCategorizedByService() {
         return this.permissionService.findAllCategorizedByService()
     }

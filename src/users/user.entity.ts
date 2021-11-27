@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CanRead, CanReadPermission, RandomUtil } from "@tsalliance/rest";
+import { CanRead, RandomUtil } from "@tsalliance/rest";
 import { Account, AccountType } from "src/account/account.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role, RoleDTO } from "src/roles/role.entity";
@@ -34,7 +34,7 @@ export class User extends Account {
     @Column({ length: 32, nullable: false, unique: true })
     public username: string;
 
-    @CanReadPermission(PermissionCatalog.USERS_READ)
+    @CanRead([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     @Column({ nullable: false, unique: true })
     public email: string;
 
@@ -42,19 +42,19 @@ export class User extends Account {
     @Column({ nullable: false })
     public password: string;
 
-    @CanReadPermission(PermissionCatalog.USERS_READ)
+    @CanRead([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     @Column({ unique: true, nullable: true })
     public discordId?: string;
 
     @Column({ nullable: true })
     public avatarResourceId: string;
 
-    @CanReadPermission(PermissionCatalog.USERS_READ)
+    @CanRead([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     @ManyToOne(() => Role, { nullable: true, onDelete: "SET NULL", eager: true })
     @JoinColumn()
     public role: Role;
 
-    @CanReadPermission(PermissionCatalog.USERS_READ)
+    @CanRead([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     @ManyToMany(() => Service)
     @JoinTable({ name: "user_services" })
     public allowedServices: Service[]
@@ -76,14 +76,4 @@ export class User extends Account {
         this.accountType = AccountType.USER;
         this.credentialHash = RandomUtil.randomCredentialHash()
     }
-
-    public censored(): User {
-        const user = { ...this }
-        user.accountType = undefined;
-        user.password = undefined;
-        user.credentialHash = undefined;
-        
-        return user;
-    }
-
 }

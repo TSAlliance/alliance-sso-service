@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Authentication, Permission } from '@tsalliance/rest';
+import { Authentication, CanAccess } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
 import { Account } from 'src/account/account.entity';
 import { PermissionCatalog } from 'src/permission/permission.registry';
@@ -15,31 +15,31 @@ export class RolesController {
     ){}
 
     @Get()
-    @Permission(PermissionCatalog.ROLES_READ)
+    @CanAccess([PermissionCatalog.ROLES_READ,PermissionCatalog.ROLES_WRITE])
     public async listAll(@Pageable() pageable: Pageable) {
         return this.roleService.findAll(pageable)
     }
 
     @Get(":roleId")
-    @Permission(PermissionCatalog.ROLES_READ)
+    @CanAccess([PermissionCatalog.ROLES_READ,PermissionCatalog.ROLES_WRITE])
     public async findById(@Param("roleId") roleId: string) {
         return this.roleService.findById(roleId, { relations: ["permissions"] })
     }
 
     @Post()
-    @Permission(PermissionCatalog.ROLES_WRITE)
+    @CanAccess(PermissionCatalog.ROLES_WRITE)
     public async createRole(@Body() role: RoleDTO) {
         return this.roleService.create(role);
     }
 
     @Put(":roleId")
-    @Permission(PermissionCatalog.ROLES_WRITE)
+    @CanAccess(PermissionCatalog.ROLES_WRITE)
     public async updateRole(@Param("roleId") roleId: string, @Body() role: RoleDTO, @Authentication() account: Account) {
         return this.roleService.update(roleId, role, account);
     }
 
     @Delete(":roleId")
-    @Permission(PermissionCatalog.ROLES_WRITE)
+    @CanAccess(PermissionCatalog.ROLES_WRITE)
     public async deleteRole(@Param("roleId") roleId: string, @Authentication() account: Account) {
         return this.roleService.delete(roleId, account);
     }

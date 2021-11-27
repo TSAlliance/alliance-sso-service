@@ -21,7 +21,6 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
 
     public async findAll(pageable: Pageable, options?: FindManyOptions<User>): Promise<Page<User>> {
         const result = await this.userRepository.findAll(pageable, options);
-        result?.elements.forEach((value) => value = value.censored())
         return result;
     }
 
@@ -30,28 +29,22 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         return Object.assign(new User(), result);
     }
 
-    public async findByIdOrFail(userId: string, withSensitive = false): Promise<User> {
-        const result = await this.userRepository.findOneOrFail({ where: { id: userId }, relations: ["role", "role.permissions"]});
-        if(!withSensitive) {
-            return result?.censored();
-        }
-        
+    public async findByRoleId(roleId: string): Promise<User[]> {
+        return this.userRepository.find({ where: { role: { id: roleId }}});
+    }
+
+    public async findByIdOrFail(userId: string): Promise<User> {
+        const result = await this.userRepository.findOneOrFail({ where: { id: userId }, relations: ["role", "role.permissions"]});     
         return Object.assign(new User(), result);
     }
 
-    public async findByEmail(email: string, withSensitive = false): Promise<User> {
+    public async findByEmail(email: string): Promise<User> {
         const result = await this.userRepository.findOne({ where: { email }});
-        if(!withSensitive) {
-            return result?.censored();
-        }
         return result;
     }
 
-    public async findByEmailOrUsername(email: string, username: string, withSensitive = false): Promise<User> {
+    public async findByEmailOrUsername(email: string, username: string): Promise<User> {
         const result = await this.userRepository.findOne({ where: [{ username },{ email }]})
-        if(!withSensitive) {
-            return result?.censored();
-        }
         return result;
     }
 
@@ -73,7 +66,8 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         user.discordId = data.discordId;
         user.allowedServices = data.allowedServices;
         user.role = data.role
-        const result = (await this.userRepository.save(user)).censored();
+
+        const result = (await this.userRepository.save(user))
 
         try {
             const avatarSvgData = this.mediaService.generateAvatar(data.username + Date.now());

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
-import { Authentication, Permission } from "@tsalliance/rest";
+import { Authentication, CanAccess } from "@tsalliance/rest";
 import { Pageable } from "nestjs-pager";
 import { Account } from "src/account/account.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
@@ -14,32 +14,32 @@ export class UsersController {
     constructor(private userService: UserService){}
 
     @Get()
-    @Permission(PermissionCatalog.USERS_READ)
+    @CanAccess([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     @ApiQuery({ name: "select", required: false, isArray: true, type: "string" })
     public async findAll(@Pageable() pageable: Pageable) {
         return this.userService.findAll(pageable);
     }
 
     @Get(":userId")
-    @Permission(PermissionCatalog.USERS_READ)
+    @CanAccess([PermissionCatalog.USERS_READ,PermissionCatalog.USERS_WRITE])
     public async findById(@Param("userId") userId: string) {
         return this.userService.findById(userId)
     }
 
     @Post()
-    @Permission(PermissionCatalog.USERS_WRITE)
+    @CanAccess(PermissionCatalog.USERS_WRITE)
     public async createUser(@Body() user: UserDTO) {
         return this.userService.create(user);
     }
 
     @Put(":userId")
-    @Permission(PermissionCatalog.USERS_WRITE)
+    @CanAccess(PermissionCatalog.USERS_WRITE)
     public async updateUser(@Param("userId") userId: string, @Body() user: UserDTO, @Authentication() account: Account) {
         return this.userService.update(userId, user, account);
     }
 
     @Delete(":userId")
-    @Permission(PermissionCatalog.USERS_WRITE)
+    @CanAccess(PermissionCatalog.USERS_WRITE)
     public async deleteUser(@Param("userId") userId: string, @Authentication() account: Account) {
         return this.userService.delete(userId, account)
     }
