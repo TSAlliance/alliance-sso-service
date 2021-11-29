@@ -1,166 +1,178 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtDTO, JwtResponseDTO, CredentialsDTO, RegistrationDTO, RequestRecoveryDTO, RecoveryDTO, AccountRecoveryToken, ChangePasswordDTO, AuthorizeDTO } from './authentication.entity';
-import { AccountType } from 'src/account/account.entity';
-import { ServiceService } from '../services/service.service';
-import { UserService } from 'src/users/user.service';
-import { User } from 'src/users/user.entity';
-import { RecoveryTokenRepository } from './authentication.repository';
-import { PasswordService } from './password.service';
-import { ValidationException, CredentialsMismatchException, SessionExpiredException } from '@tsalliance/rest';
-import { InviteService } from 'src/invite/invite.service';
-import { Service } from 'src/services/service.entity';
+import { CredentialsMismatchException } from '@tsalliance/rest';
 import { DeleteResult } from 'typeorm';
+import { AccountType } from 'src/account/account.entity';
+import { InviteService } from 'src/invite/invite.service';
 import { MailService } from 'src/mail/mail.service';
-import { SSOAccountMissingError, SSOInvalidRedirectUriError } from "client/src/error/errors"
+import { Service } from 'src/services/service.entity';
+import { ServiceService } from 'src/services/service.service';
+import { User } from 'src/users/user.entity';
+import { UserService } from 'src/users/user.service';
+import { AccessTokenDTO } from './dto/accessToken.dto';
+import { CreateAuthenticationDTO } from './dto/create-authentication.dto';
+import { CreateAuthorizationDTO } from './dto/create-authorization.dto';
+import { RecoveryRequestDTO } from './dto/recover-request.dto';
+import { RegistrationDTO } from './dto/registration.dto';
+import { Authentication } from './entities/authentication.entity';
+import { Authorization } from './entities/authorization.entity';
+import { GrantCode } from './entities/grantCode.entity';
+import { PasswordService } from './password.service';
+import { GrantCodeRepository } from './repositories/grantCode.repository';
+import { RecoveryTokenRepository } from './repositories/recoveryToken.repository';
+import { AccountRecoveryToken } from './entities/recoveryToken.entity';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { RecoverAccountDTO } from './dto/recover-account.dto';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
+
     constructor(
-        private jwtService: JwtService,
         private userService: UserService,
-        private serviceService: ServiceService,
         private passwordService: PasswordService,
-        private recoveryTokenRepository: RecoveryTokenRepository,
+        private jwtService: JwtService,
         private inviteService: InviteService,
-        private mailService: MailService
-    ){}
+        private serviceService: ServiceService,
+        private mailService: MailService,
+        private grantCodeRepository: GrantCodeRepository,
+        private recoveryTokenRepository: RecoveryTokenRepository
+    ) {}
 
-    public async signInWithCredentials(credentials: CredentialsDTO): Promise<JwtResponseDTO> {
-        let account: Service | User;
-        if(!credentials.accountType) credentials.accountType = AccountType.USER;
+    /**
+     * Request grantCode for requesting accessTokens.
+     * @param createAuthenticationDto Data needed to issue grantCode
+     */
+    public async authenticate(createAuthenticationDto: CreateAuthenticationDTO): Promise < Authentication > {
+        let account: User;
 
-        if(credentials.accountType == AccountType.USER) {
-            // Login as user
-            account = await this.userService.findByEmailOrUsername(credentials.identifier, credentials.identifier);
-            if(!account) throw new NotFoundException();
+        const grantCode = new GrantCode();
+        grantCode.clientId = createAuthenticationDto.clientId;
+        grantCode.accountType = AccountType.USER;
+        grantCode.stayLoggedIn = createAuthenticationDto.stayLoggedIn;
 
-            if(!this.passwordService.comparePasswords(credentials.password, (account as User).password)) {
+        // Check if redirect_uri matches client_id of service.
+        // If not, reject authentication request.
+        if (!this.serviceService.hasRedirectUri(createAuthenticationDto.clientId, createAuthenticationDto.redirectUri)) {
+            throw new BadRequestException("Invalid redirect uri.")
+        }
+
+        // Check if there already is a valid accessToken available and check if it is still functional.
+        // If everything is fine, proceed and create a new grantCode.
+        if (createAuthenticationDto.useExistingAccessToken) {
+            const accessTokenDto = await this.decodeAccessToken(createAuthenticationDto.useExistingAccessToken);
+            account = await this.authenticateAccessToken(accessTokenDto) as User;
+            
+            if(!account) throw new BadRequestException("Your account does not exist.");
+        } else {
+            // Find user by provided login credentials
+            // If account does not exist, throw error.
+            account = await this.userService.findByEmailOrUsername(createAuthenticationDto.identifier, createAuthenticationDto.identifier);
+            if (!account) throw new BadRequestException("Your account does not exist.");
+
+            // Compare provided password with the save password in the database.
+            // Throw error if they don't match
+            if (!this.passwordService.comparePasswords(createAuthenticationDto.password, account.password)) {
                 throw new CredentialsMismatchException();
             }
-
-            account = (account as User)
-            account.accountType = AccountType.USER;
-        } else {
-            // Login as service
-            credentials.stayLoggedIn = true
-
-            // If account type is SERVICE, treat identifier and password as clientId and clientSecret
-            const clientId = credentials.identifier;
-            const clientSecret = credentials.password;
-
-            account = (await this.serviceService.findByCredentials(clientId, clientSecret)) as Service;
-            if(!account) throw new NotFoundException();
-            account.accountType = AccountType.SERVICE;
         }
 
-        return this.issueJwt(account, credentials.stayLoggedIn);
+        // Save new grantCode
+        grantCode.accountId = account.id
+        return this.grantCodeRepository.save(grantCode);
     }
 
     /**
-     * Validate the provided string encoded jwt and return account information on success.
-     * @param token JWT encoded as string.
-     * @returns Account object
+     * Request an accessToken by passing in the grantCode.
+     * @param createAuthorizationDto Authorization Data like grantCode
+     * @returns Authorization
      */
-    public async signInWithToken(authorizationHeaderValue: string): Promise<Service | User> {
-        if(!authorizationHeaderValue || authorizationHeaderValue.toLowerCase().includes("undefined")) return null;
-        
-        const token = this.processAuthorizationValue(authorizationHeaderValue);
-        const decoded: JwtDTO = this.jwtService.decode(token) as JwtDTO;
-        
-        if(!decoded || (decoded.exp && decoded.exp <= Date.now())) {
-            throw new SessionExpiredException();
+    public async authorize(createAuthorizationDto: CreateAuthorizationDTO): Promise < Authorization > {
+        const grantCode = await this.grantCodeRepository.findOne({ where: { grantCode: createAuthorizationDto.grantCode }});
+        if(!grantCode) throw new BadRequestException("Invalid grant code.");
+
+        if(!await this.serviceService.hasRedirectUri(grantCode.clientId, createAuthorizationDto.redirectUri)) {
+            throw new BadRequestException("Invalid redirect_uri.");
         }
 
-        return this.authorizeDecodedToken(decoded);
+        const account = await this.userService.findById(grantCode.accountId)
+        if(!account) throw new BadRequestException("Your account does not exist.");
+
+        const expiresAt = grantCode.stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7));
+        const authorization = new Authorization(await this.generateAccessToken(grantCode, account.credentialHash), expiresAt);
+
+        await this.grantCodeRepository.delete({ accountId: grantCode.accountId });
+        return authorization;
     }
 
     /**
-     * Validate if redirect after login is allowed and if redirect uris match
-     * @param token JWT encoded as string.
-     * @returns Account object
+     * Decode jwt string to AccessToken object
+     * @param accessTokenString Jwt string to decode
+     * @returns AccessTokenDTO
      */
-     public async authorize(authorizeData: AuthorizeDTO): Promise<void> {
-        const service = await this.serviceService.getRepository().findOne({ where: { clientId: authorizeData.client_id }, relations: ["redirectUris"] });
-        if(!service) throw new NotFoundException();
-        if(!service.redirectUris.map((uri) => uri.uri).includes(authorizeData.redirect_uri)) {
-            throw new SSOInvalidRedirectUriError();
-        }
-
-        return;
+    public async decodeAccessToken(accessTokenString: string): Promise < AccessTokenDTO > {
+        if(accessTokenString.startsWith("Bearer")) accessTokenString = accessTokenString.slice(7, accessTokenString.length);
+        return this.jwtService.decode(accessTokenString) as AccessTokenDTO
     }
 
     /**
-     * Process the authorization header value and return string containing the extracted jwt.
-     * @param authorizationHeaderValue String containing the authorization header value.
-     * @returns String containing the extracted jwt.
+     * Authenticate a decoded accessToken and return account data
+     * @param accessTokenDto Decoded data
+     * @returns Service | User
      */
-    private processAuthorizationValue(authorizationHeaderValue: string): string {
-        if(!authorizationHeaderValue?.toLowerCase().startsWith("bearer")) {
-            throw new BadRequestException();
-        }
-
-        return authorizationHeaderValue.slice(7, authorizationHeaderValue.length);
-    }
-
-    /**
-     * Authorize the processed jwt. Returns account information on success.
-     * @param token Decoded jwt object
-     * @returns Account object
-     */
-    public async authorizeDecodedToken(token: JwtDTO): Promise<Service | User> {
+    public async authenticateAccessToken(accessTokenDto: AccessTokenDTO): Promise <Service | User> {
         let account: Service | User;
 
         try {
-            if(token.accountType == AccountType.USER) {
-                account = Object.assign(new User(), await this.userService.findByIdOrFail(token.id))
+            if (accessTokenDto.accountType == AccountType.USER) {
+                account = Object.assign(new User(), await this.userService.findByIdOrFail(accessTokenDto.accountId))
             } else {
-                account = Object.assign(new Service(), await this.serviceService.findByIdOrFail(token.id))
+                account = Object.assign(new Service(), await this.serviceService.findByIdOrFail(accessTokenDto.accountId))
             }
         } catch (err) {
-            throw new SSOAccountMissingError();
+            throw new NotFoundException("You account does not exist.");
         }
 
-        // Check if credentials have changed, so that the jwt can get rejected
+        // Check if credentials have changed or the token is expired, so that the jwt can get rejected
         // and a new one must be obtained by signInWithCredentials()
-        if(token.credentialHash != account.credentialHash) {
-            throw new SessionExpiredException()
+        if (accessTokenDto.credentialHash != account.credentialHash || (accessTokenDto.exp <= Date.now())) {
+            throw new UnauthorizedException("Access token expired.")
         }
 
         return account;
     }
 
     /**
-     * Sign a new jwt for a login attempt.
-     * @param account Account to sign the jwt for.
-     * @param stayLoggedIn Specifiy if the jwt should expire after 7 days or not. If true, the token never expires.
-     * @returns JwtResponseDTO object
+     * Generate a new access token for account
+     * @param grantCode GrantCode thats holding the data to generate accessToken
+     * @param credentialHash Credential Hash. This will invalidate the token, if account has changed its login credentials.
+     * @param stayLoggedIn Specify if the accessToken should expire after 7 days or not.
+     * @returns String encoded jwt
      */
-    private async issueJwt(account: Service | User, stayLoggedIn = false): Promise<JwtResponseDTO> {
-        const tokenDTO: JwtDTO = { id: account.id, accountType: account.accountType, credentialHash: account.credentialHash }
-        const expiresAt: Date = (stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7)));
-        if(!stayLoggedIn) tokenDTO.exp = expiresAt.getTime();
-        
-        return {
-            token: this.jwtService.sign(tokenDTO),
-            expiresAt,
-            issuedAt: new Date()
+    public async generateAccessToken(grantCode: GrantCode, credentialHash: string): Promise < string > {
+        const tokenDTO: AccessTokenDTO = {
+            accountId: grantCode.accountId,
+            accountType: grantCode.accountType,
+            credentialHash
         }
+        const expiresAt: Date = (grantCode.stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7)));
+
+        if (!grantCode.stayLoggedIn) tokenDTO.exp = expiresAt.getTime();
+        return this.jwtService.sign(tokenDTO)
     }
 
     /**
-     * Register user
+     * Register new user. Creating new service accounts must be handled via different service
      * @param registration Registration Data 
+     * @returns void. But throws error on failure
      */
     public async register(registration: RegistrationDTO) {   
         const invite = await this.inviteService.findByIdIncludingRelations(registration.inviteCode);
-        if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException();
+        if(!invite || !this.inviteService.isInviteValid(invite)) throw new BadRequestException("Invalid invite code.");
 
         await this.userService.create({
             email: registration.email,
             username: registration.username,
             password: registration.password,
-            discordId: registration.discordId,
             role: invite.assignRole
         });
 
@@ -173,70 +185,15 @@ export class AuthService {
     }
 
     /**
-     * Request account recovery for user. This will send an email to the user containing a reset link.
-     * @param recovery RecoveryDTO containing mainly the email address.
-     */
-    public async requestRecovery(recovery: RequestRecoveryDTO) {
-        const user = await this.userService.findByEmail(recovery.email);
-        if(!user) return;
-
-        if(await this.hasRecoveryToken(user.id)) {
-            await this.deleteRecoveryTokenOfUser(user.id);
-        }
-
-        const token = await this.recoveryTokenRepository.save(new AccountRecoveryToken(user))
-        await this.mailService.sendRecoveryMail({ token })
-    }
-
-    /**
-     * Recover an user account by setting a new password and verify the request using the recovery token.
-     * @param recovery RecoveryDTO containing the token and new password.
-     */
-    public async recover(recovery: RecoveryDTO) {
-        const token: AccountRecoveryToken = await this.recoveryTokenRepository.findOneOrFail({ where: { code: recovery.token }, relations: ["user"]})
-        if(!token) throw new BadRequestException();
-
-        if(!token.isValid()) {
-            await this.deleteRecoveryToken(token.code)
-        } else {
-            const user = token.user;
-
-            // Check if new password is old password
-            if(this.passwordService.comparePasswords(recovery.password, user.password)) {
-                throw new ValidationException([{ fieldname: "password", errors: [
-                        { name: "match", expected: false, found: true }
-                    ]}
-                ])
-            }
-            
-            await this.recoveryTokenRepository.manager.transaction(async() => {
-                await this.updatePassword(token.user.id, recovery.password);
-                await this.deleteRecoveryToken(token.code)
-            })
-        }
-    }
-
-    /**
      * Change password of an user account.
      * @param userId User's id
      * @param data Password data
      */
-    public async changeCredentials(userId: string, data: ChangePasswordDTO) {
-        // Check if passwords aren't the same
-        if(data.currentPassword == data.newPassword) {
-            throw new ValidationException([{ fieldname: "newPassword", errors: [
-                    { name: "unique", expected: true, found: false }
-                ]}
-            ])
-        }
-
+    public async changeCredentials(userId: string, data: UpdatePasswordDTO) {
         // Compare password to verify request
         const user = await this.userService.findById(userId);
         if(!this.passwordService.comparePasswords(data.currentPassword, user.password)) {
-            throw new ValidationException([{ fieldname: "currentPassword", errors: [
-                    { name: "match", expected: true, found: false }
-                ]}
-            ])
+            throw new CredentialsMismatchException()
         }
 
         // Update password
@@ -257,14 +214,58 @@ export class AuthService {
     }
 
     /**
+     * Request account recovery for user. This will send an email to the user containing a reset link.
+     * @param recovery RecoveryDTO containing mainly the email address.
+     */
+     public async requestRecovery(recovery: RecoveryRequestDTO) {
+        const user = await this.userService.findByEmail(recovery.email);
+        if(!user) return;
+
+        if(await this.hasRecoveryToken(user.id)) {
+            await this.deleteRecoveryTokenOfUser(user.id);
+        }
+        
+        const recoveryToken = new AccountRecoveryToken();
+        recoveryToken.user = user;
+
+        const result = await this.recoveryTokenRepository.save(recoveryToken)
+        await this.mailService.sendRecoveryMail({ token: result })
+    }
+
+    /**
+     * Recover an user account by setting a new password and verify the request using the recovery token.
+     * @param recovery RecoveryDTO containing the token and new password.
+     */
+     public async recover(recovery: RecoverAccountDTO) {
+        const token: AccountRecoveryToken = await this.recoveryTokenRepository.findOneOrFail({ where: { code: recovery.token }, relations: ["user"]})
+        if(!token) throw new BadRequestException();
+
+        if(!token.isValid()) {
+            await this.deleteRecoveryToken(token.code)
+        } else {
+            const user = token.user;
+
+            // Check if new password is old password
+            if(this.passwordService.comparePasswords(recovery.password, user.password)) {
+                throw new BadRequestException("New password shall not be old password.")
+            }
+            
+            await this.recoveryTokenRepository.manager.transaction(async() => {
+                await this.updatePassword(token.user.id, recovery.password);
+                await this.deleteRecoveryToken(token.code)
+            })
+        }
+    }
+
+    /**
      * Check if an user account already has a recovery requested
      * @param id Id of the user to lookup
      * @returns Promise of type boolean
      */
-    public async hasRecoveryToken(userId: string): Promise<boolean> {
-        return this.recoveryTokenRepository.exists({
+     public async hasRecoveryToken(userId: string): Promise<boolean> {
+        return !!(await this.recoveryTokenRepository.findOne({
             user: { id: userId }
-        })
+        }));
     }
 
     /**
@@ -281,8 +282,10 @@ export class AuthService {
      * @param userId The user to delete tokens off
      * @returns Promise of type DeleteResult
      */
-     public async deleteRecoveryTokenOfUser(userId: string): Promise<DeleteResult> {
+    public async deleteRecoveryTokenOfUser(userId: string): Promise<DeleteResult> {
         return this.recoveryTokenRepository.delete({ user: { id: userId } })
     }
 
+
+    
 }

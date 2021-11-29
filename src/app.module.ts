@@ -6,7 +6,6 @@ import { ServiceModule } from './services/service.module';
 import { RolesModule } from './roles/role.module';
 import { UsersModule } from './users/user.module';
 import { MediaModule } from './media/media.module';
-import { AuthModule } from './authentication/authentication.module';
 import { RoleService } from './roles/role.service';
 import { ServiceService } from './services/service.service';
 import { PermissionService } from './permission/permission.service';
@@ -17,6 +16,7 @@ import path from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { InviteModule } from './invite/invite.module';
 import { InviteService } from './invite/invite.service';
+import { AuthenticationModule } from './authentication/authentication.module';
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
 const envFile = ".env" + (isDev ? ".dev" : "")
@@ -28,9 +28,9 @@ const envFile = ".env" + (isDev ? ".dev" : "")
     RolesModule,
     UsersModule,
     MediaModule,
-    AuthModule,
     InviteModule, 
     MailModule,
+    AuthenticationModule,
     ConfigModule.forRoot(
       {
         isGlobal: true, 
@@ -76,7 +76,8 @@ const envFile = ".env" + (isDev ? ".dev" : "")
           }
       }
     }),
-    SubscriberModule
+    SubscriberModule,
+    AuthenticationModule
   ],
   providers: [ ResponseInterceptor ],
   controllers: [],

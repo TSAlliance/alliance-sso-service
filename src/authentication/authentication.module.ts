@@ -1,31 +1,29 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './authentication.service';
-import { AuthController } from './authentication.controller';
-import { JwtModule } from '@nestjs/jwt';
-import { ServiceModule } from '../services/service.module';
-import { UsersModule } from 'src/users/user.module';
+import { AuthenticationService } from './authentication.service';
+import { AuthenticationController } from './authentication.controller';
 import { PasswordService } from './password.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RecoveryTokenRepository } from './authentication.repository';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthenticationGuard } from './authentication.guard';
+import { GrantCodeRepository } from './repositories/grantCode.repository';
+import { RecoveryTokenRepository } from './repositories/recoveryToken.repository';
+import { UsersModule } from 'src/users/user.module';
+import { MailModule } from 'src/mail/mail.module';
 import { InviteModule } from 'src/invite/invite.module';
+import { ServiceModule } from 'src/services/service.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
+  controllers: [AuthenticationController],
+  providers: [AuthenticationService, PasswordService],
+  exports: [AuthenticationService, PasswordService],
   imports: [
+    UsersModule,
+    MailModule,
+    InviteModule,
     ServiceModule,
+    TypeOrmModule.forFeature([ GrantCodeRepository, RecoveryTokenRepository ]),
     JwtModule.register({
       secret: "TODO_secret"
-    }),
-    UsersModule,
-    InviteModule,
-    TypeOrmModule.forFeature([ RecoveryTokenRepository ])
-  ],
-  providers: [AuthService, PasswordService, { provide: APP_GUARD, useClass: AuthenticationGuard }],
-  controllers: [AuthController],
-  exports: [
-    PasswordService,
-    AuthService
+    })
   ]
 })
-export class AuthModule {}
+export class AuthenticationModule {}

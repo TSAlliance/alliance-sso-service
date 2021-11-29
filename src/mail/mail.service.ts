@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common"
 import { MailerService } from '@nestjs-modules/mailer';
-import { AccountRecoveryToken } from "src/authentication/authentication.entity";
 import { existsSync, readFileSync } from "fs";
 import path from "path";
 import mime from "mime"
+import { AccountRecoveryToken } from "src/authentication/entities/recoveryToken.entity";
 
 export interface RecoveryMailDTO {
     token: AccountRecoveryToken;
