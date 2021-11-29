@@ -45,7 +45,6 @@ export class Service extends Account implements ServiceDTO {
     @Column({ nullable: true })
     public iconResourceUri: string;
 
-    @CanRead([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
     @Column({ unique: true, nullable: false })
     public clientId: string;
 

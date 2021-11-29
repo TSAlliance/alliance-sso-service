@@ -110,6 +110,7 @@ export class AuthenticationService {
      * @returns AccessTokenDTO
      */
     public async decodeAccessToken(accessTokenString: string): Promise < AccessTokenDTO > {
+        if(!accessTokenString) return null;
         if(accessTokenString.startsWith("Bearer")) accessTokenString = accessTokenString.slice(7, accessTokenString.length);
         return this.jwtService.decode(accessTokenString) as AccessTokenDTO
     }
@@ -189,7 +190,7 @@ export class AuthenticationService {
      * @param userId User's id
      * @param data Password data
      */
-    public async changeCredentials(userId: string, data: UpdatePasswordDTO) {
+    public async changePassword(userId: string, data: UpdatePasswordDTO) {
         // Compare password to verify request
         const user = await this.userService.findById(userId);
         if(!this.passwordService.comparePasswords(data.currentPassword, user.password)) {
@@ -285,7 +286,5 @@ export class AuthenticationService {
     public async deleteRecoveryTokenOfUser(userId: string): Promise<DeleteResult> {
         return this.recoveryTokenRepository.delete({ user: { id: userId } })
     }
-
-
     
 }

@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException
 import { Reflector } from '@nestjs/core';
 import { AccountNotFoundException, InsufficientPermissionException, PROPERTY_PERMISSION_META_KEY } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
+import { Account } from 'src/account/account.entity';
 import { AuthenticationService } from '../authentication.service';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -12,19 +13,24 @@ export class AuthenticationGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean | Promise < boolean > | Observable < boolean > {
     return new Promise(async (resolve, reject) => {
       try {
-        const requiredPermissions: string[] = this.reflector.get<string[]>(PROPERTY_PERMISSION_META_KEY, ctx.getHandler());
+        const metaValue: string[] | boolean = this.reflector.get<string[] | boolean>(PROPERTY_PERMISSION_META_KEY, ctx.getHandler());
+        const requiredPermissions: string[] = [];
+
+        if(typeof metaValue != "undefined" && metaValue != null) {
+          if(typeof metaValue == "boolean") {
+            if(!metaValue) throw new InsufficientPermissionException();
+          } else {
+            requiredPermissions.push(...metaValue);
+          }
+        }
+        
         const isRouteRequiringPermission: boolean = requiredPermissions?.length > 0 || false;
         const headers: any = ctx.switchToHttp().getRequest().headers;
         const authHeaderValue: string = headers["authorization"]
 
-        console.log("permissions required by route: ", requiredPermissions)
-        console.log("is route requiring permission? ", isRouteRequiringPermission)
-        console.log("authHeaderValue: ", authHeaderValue.substring(0, 12)+"...")
-
         // If no header exists and authentication is needed 
         // ==> throw unauthorized
         if(!authHeaderValue && isRouteRequiringPermission) {
-          console.log("Authentication failed: No Header value, but route is requiring permissions.")
           throw new UnauthorizedException()
         }
 
@@ -32,10 +38,12 @@ export class AuthenticationGuard implements CanActivate {
         // Even if route does not required authentication, a request
         // is authenticated if a header was found.
         // Decode access token and validate it to retrieve account data
-        console.log("decoding header value")
         const decodedToken = await this.authService.decodeAccessToken(authHeaderValue)
-        console.log("authenticating decoded token")
-        const account = await this.authService.authenticateAccessToken(decodedToken)
+        let account: Account = null;
+
+        if(decodedToken) {
+          account = await this.authService.authenticateAccessToken(decodedToken)
+        }      
 
         // TODO: Implement new auth flow in FE
 

@@ -17,6 +17,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { InviteModule } from './invite/invite.module';
 import { InviteService } from './invite/invite.service';
 import { AuthenticationModule } from './authentication/authentication.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthenticationGuard } from './authentication/guards/authentication.guard';
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
 const envFile = ".env" + (isDev ? ".dev" : "")
@@ -79,7 +81,13 @@ const envFile = ".env" + (isDev ? ".dev" : "")
     SubscriberModule,
     AuthenticationModule
   ],
-  providers: [ ResponseInterceptor ],
+  providers: [ 
+    ResponseInterceptor, 
+    {
+      provide: APP_GUARD,
+      useClass: AuthenticationGuard,
+    }, 
+  ],
   controllers: [],
 })
 export class AppModule implements OnModuleInit {

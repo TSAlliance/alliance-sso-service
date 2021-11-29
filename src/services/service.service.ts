@@ -34,6 +34,14 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
         return this.serviceRepository.findAll(pageable, options);
     }
 
+    public async findAllListed(pageable: Pageable): Promise<Page<Service>> {
+        return this.serviceRepository.findAll(pageable, { where: { isListed: true }});
+    }
+
+    public async findListedById(serviceId: string): Promise<Service> {
+        return this.serviceRepository.findOne({ where: { id: serviceId, isListed: true }})
+    }
+
     public async findById(serviceId: string): Promise<Service> {
         return this.serviceRepository.findOne({ where: { id: serviceId }})
     }
@@ -123,6 +131,7 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
     }
 
     public async hasRedirectUri(serviceClientId: string, redirectUri: string): Promise<boolean> {
+        if((await this.findRootService()).clientId == serviceClientId) return true;
         return !!(await this.findByIdIncludingRelations(serviceClientId)).redirectUris.find((uri) => uri.uri == redirectUri)
     }
 

@@ -1,6 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsOptional, IsUrl, Matches } from "class-validator";
-import { AccountType } from "src/account/account.entity";
+import { IsBoolean, IsNotEmpty, IsOptional, IsUrl } from "class-validator";
 
 export class CreateAuthenticationDTO {
     

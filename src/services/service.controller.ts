@@ -1,7 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CanAccess } from '@tsalliance/rest';
+import { Authentication, CanAccess } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
+import { Account } from 'src/account/account.entity';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { DeleteResult } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
@@ -16,14 +17,27 @@ export class ServiceController {
     ){}
 
     @Get()
-    @CanAccess([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
-    public async findAll(@Pageable() pageable?: Pageable) {
+    // @CanAccess([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
+    public async findAll(@Authentication() authentication: Account, @Pageable() pageable?: Pageable) {
+        if(!authentication || !authentication.hasPermission(PermissionCatalog.SERVICES_WRITE.value) && !authentication.hasPermission(PermissionCatalog.SERVICES_READ.value)) {
+            return this.serviceService.findAllListed(pageable)
+        }
+
         return this.serviceService.findAll(pageable);
     }
 
     @Get(":serviceId")
-    @CanAccess([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
-    public async getService(@Param("serviceId") serviceId: string) {
+    // @CanAccess([PermissionCatalog.SERVICES_READ, PermissionCatalog.SERVICES_WRITE])
+    // @CanAccess(true)
+    public async getService(@Param("serviceId") serviceId: string, @Authentication() authentication: Account) {
+        if(serviceId == "root") {
+            return this.serviceService.findRootService();
+        }
+
+        if(!authentication || !authentication.hasPermission(PermissionCatalog.SERVICES_WRITE.value) && !authentication.hasPermission(PermissionCatalog.SERVICES_READ.value)) {
+            return this.serviceService.findListedById(serviceId)
+        }
+        
         return this.serviceService.findById(serviceId)
     }
 
