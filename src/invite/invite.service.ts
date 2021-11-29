@@ -97,10 +97,19 @@ export class InviteService {
     const rootRole = await this.roleService.findRootRole();
 
     if((await this.userService.findByRoleId(ROOT_ROLE_ID)).length <= 0) {
-        await this.create({
+        const result = await this.create({
             assignRole: rootRole,
             maxUses: 1
         }, undefined)
+
+        console.log("[]===========================================[]");
+        console.log("");
+        console.log("Created invite for root user account.")
+        console.log("Use following code to register initial root account:")
+        console.log("");
+        console.log(result.id)
+        console.log("");
+        console.log("[]===========================================[]");
     }
   }
 

@@ -29,6 +29,11 @@ export class InviteController {
         return this.inviteService.findById(id);
     }
 
+    @Get(':id/details')
+    public findOneWithRelations(@Param('id') id: string) {
+        return this.inviteService.findByIdIncludingRelations(id);
+    }
+
     @Put(':id')
     @CanAccess(PermissionCatalog.INVITES_WRITE)
     public update(@Param('id') id: string, @Body() updateInviteDto: UpdateInviteDto) {

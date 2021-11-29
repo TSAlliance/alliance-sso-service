@@ -1,37 +1,37 @@
-import { ApiError } from "@tsalliance/sdk"
+import { ApiError } from "@tsalliance/rest";
 
 export class InternalError extends ApiError {
     constructor() {
-        super("Internal server error occured", 500, "INTERNAL_ERROR")
+        super("Internal error occured", "INTERNAL_ERROR", { statusCode: 500, isCritical: true });
     }
 }
 
 export class SSOAccountMissingError extends ApiError {
     constructor() {
-        super("Account not found", 404, "NOT_FOUND")
+        super("Account not found.", "NOT_FOUND", { statusCode: 404, isCritical: false });
     }
 }
 
 export class SSOSessionExpiredError extends ApiError {
     constructor() {
-        super("Session expired.", 403, "SESSION_EXPIRED");
+        super("Session expired.", "SESSION_EXPIRED", { statusCode: 403, isCritical: true });
     }
 }
 
 export class SSOUnauthorizedError extends ApiError {
     constructor() {
-        super("Unauthorized.", 403, "UNAUTHORIZED");
+        super("Unauthorized.", "UNAUTHORIZED", { statusCode: 403, isCritical: true });
     }
 }
 
 export class SSOInsufficientPermissionError extends ApiError {
     constructor() {
-        super("Insufficient permission.", 403, "INSUFFICIENT_PERMISSION");
+        super("Insufficient permission.", "INSUFFICIENT_PERMISSION", { statusCode: 403, isCritical: true });
     }
 }
 
 export class SSOInvalidRedirectUriError extends ApiError {
     constructor() {
-        super("Invalid redirect_uri.", 400, "INVALID_REDIRECT");
+        super("Invalid redirect_uri.", "INVALID_REDIRECT", { statusCode: 400, isCritical: false });
     }
 }

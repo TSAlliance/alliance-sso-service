@@ -35,7 +35,15 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
     }
 
     public async findById(serviceId: string): Promise<Service> {
-        return this.serviceRepository.findOne({ where: { id: serviceId } })
+        return this.serviceRepository.findOne({ where: { id: serviceId }})
+    }
+
+    public async findByIdIncludingRelations(id: string): Promise<Service> {
+        return this.serviceRepository.findOne({ where: { id }, relations: ["redirectUris", "permissions"]})
+    }
+
+    public async findByClientIdIncludingRelations(clientId: string): Promise<Service> {
+        return this.serviceRepository.findOne({ where: { clientId }, relations: ["redirectUris", "permissions"]})
     }
 
     public async findByClientId(clientId: string): Promise<Service> {
@@ -112,6 +120,10 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
         service.credentialHash = RandomUtil.randomCredentialHash();
 
         return this.serviceRepository.save(service);
+    }
+
+    public async hasRedirectUri(serviceClientId: string, redirectUri: string): Promise<boolean> {
+        return !!(await this.findByIdIncludingRelations(serviceClientId)).redirectUris.find((uri) => uri.uri == redirectUri)
     }
 
 }
