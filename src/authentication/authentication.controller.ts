@@ -6,6 +6,7 @@ import { CreateAuthenticationDTO } from './dto/create-authentication.dto';
 import { CreateAuthorizationDTO } from './dto/create-authorization.dto';
 import { RecoverAccountDTO } from './dto/recover-account.dto';
 import { RecoveryRequestDTO } from './dto/recover-request.dto';
+import { RegistrationDTO } from './dto/registration.dto';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 
 @Controller('authentication')
@@ -14,6 +15,7 @@ export class AuthenticationController {
 
   @Post("/authenticate")
   public async authenticate(@Body() createAuthenticationDto: CreateAuthenticationDTO) {
+    console.log(createAuthenticationDto)
     return this.authenticationService.authenticate(createAuthenticationDto);
   }
 
@@ -36,5 +38,10 @@ export class AuthenticationController {
   @Post("/recovery/recover")
   public async recoverAccount(@Body() recoverAccountDto: RecoverAccountDTO) {
     return this.authenticationService.recover(recoverAccountDto);
+  }
+
+  @Post("/register")
+  public async register(@Body() registrationDto: RegistrationDTO) {
+    return this.authenticationService.register(registrationDto);
   }
 }

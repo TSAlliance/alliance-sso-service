@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import io from "@pm2/io"
 import { ApiExceptionFilter, ResponseInterceptor } from '@tsalliance/rest';
-import { ValidationPipe } from '@nestjs/common';
 
 const portMetric = io.metric({
   id: "app/port",
@@ -19,7 +18,6 @@ async function bootstrap() {
 
   app.useGlobalFilters(new ApiExceptionFilter({ debug: false }));
   app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalPipes(new ValidationPipe())
   
   const swaggerConfig = new DocumentBuilder();
   swaggerConfig.setTitle("Alliance SSO Docs");

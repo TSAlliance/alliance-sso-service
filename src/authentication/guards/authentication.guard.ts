@@ -60,10 +60,8 @@ export class AuthenticationGuard implements CanActivate {
         // ==> throw AccountNotFoundError
         if(!account) {
           if(isRouteRequiringPermission) {
-            console.log("Authorization failed: User account does not exist and route requires permission.")
             throw new AccountNotFoundException();
           } else if(this.translateScopedParam(ctx)) {
-            console.log("Authorization failed: User account does not exist but route contains scoped parameter")
             throw new UnauthorizedException();
           }
         } else {
@@ -77,7 +75,6 @@ export class AuthenticationGuard implements CanActivate {
             const permissionGranted = !!requiredPermissions.find((permission) => account.hasPermission(permission));
 
             if(!permissionGranted) {
-              console.log("Authorization failed: Permission required.")
               throw new InsufficientPermissionException();
             }
           }

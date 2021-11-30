@@ -110,7 +110,7 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
 
         validator.throwErrors();
         service.isListed = data.isListed;
-        // TODO: service.redirectUris = uris;
+        service.redirectUris = uris;
         return this.serviceRepository.save(service);
     }
 

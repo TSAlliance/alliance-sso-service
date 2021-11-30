@@ -130,7 +130,8 @@ export class AuthenticationService {
                 account = Object.assign(new Service(), await this.serviceService.findByIdOrFail(accessTokenDto.accountId))
             }
         } catch (err) {
-            throw new NotFoundException("You account does not exist.");
+            // throw new NotFoundException("Your account does not exist.");
+            return null;
         }
 
         // Check if credentials have changed or the token is expired, so that the jwt can get rejected

@@ -7,7 +7,7 @@ export class CreateInviteDto {
     public expiresAt?: Date;
     
     @IsOptional()
-    @Min(1)
+    @Min(0)
     public maxUses?: number;
     
     @IsOptional()
