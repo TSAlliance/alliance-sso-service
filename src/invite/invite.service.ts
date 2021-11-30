@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RestAccount } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
+import { Role } from 'src/roles/role.entity';
 import { RoleService, ROOT_ROLE_ID } from 'src/roles/role.service';
 import { User } from 'src/users/user.entity';
 import { UserService } from 'src/users/user.service';
@@ -22,8 +23,12 @@ export class InviteService {
    * @returns Invite Entity
    */
   public async create(createInviteDto: CreateInviteDto, account: RestAccount): Promise<Invite> {    
-    createInviteDto.inviter = account as User;
-    return await this.inviteRepository.save(createInviteDto);
+    const invite = new Invite();
+    invite.assignRole = createInviteDto.assignRole as Role;
+    invite.expiresAt = createInviteDto.expiresAt;
+    invite.inviter = account as User;
+    invite.maxUses = createInviteDto.maxUses;
+    return await this.inviteRepository.save(invite);
   }
 
   /**
