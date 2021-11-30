@@ -15,7 +15,6 @@ export class AuthenticationController {
 
   @Post("/authenticate")
   public async authenticate(@Body() createAuthenticationDto: CreateAuthenticationDTO) {
-    console.log(createAuthenticationDto)
     return this.authenticationService.authenticate(createAuthenticationDto);
   }
 
