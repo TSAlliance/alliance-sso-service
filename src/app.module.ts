@@ -51,7 +51,7 @@ const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
       entities: [
         ...[(isDev ? "./**/*.entity{ .ts,.js}" : "./**/*.entity{.ts,.js}")]
       ],
-      synchronize: true,
+      synchronize: JSON.parse(process.env.DB_SYNCHRONIZE),
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000,
