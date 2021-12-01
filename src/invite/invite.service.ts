@@ -91,7 +91,7 @@ export class InviteService {
    * @param roleId Role id to lookup
    * @returns Invite Entity
    */
-  public async findByRoleId(roleId: string): Promise<Invite> {
+  public async findByAssignRoleId(roleId: string): Promise<Invite> {
     return this.inviteRepository.findOne({ assignRole: { id: roleId }})
   }
 
@@ -101,7 +101,7 @@ export class InviteService {
   public async createDefaultInvite() {
     const rootRole = await this.roleService.findRootRole();
 
-    if((await this.userService.findByRoleId(ROOT_ROLE_ID)).length <= 0) {
+    if((await this.userService.findAllByRoleId(ROOT_ROLE_ID)).length <= 0 && !await this.findByAssignRoleId(rootRole.id)) {
         const result = await this.create({
             assignRole: rootRole,
             maxUses: 1

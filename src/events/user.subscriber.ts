@@ -11,6 +11,7 @@ export class UserSubscriber implements EntitySubscriberInterface {
     }
 
     afterUpdate(event: UpdateEvent<User>) {
+        // TODO
         console.log("user updated", event.updatedColumns)
     }
 

@@ -29,7 +29,7 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
         return Object.assign(new User(), result);
     }
 
-    public async findByRoleId(roleId: string): Promise<User[]> {
+    public async findAllByRoleId(roleId: string): Promise<User[]> {
         return this.userRepository.find({ where: { role: { id: roleId }}});
     }
 

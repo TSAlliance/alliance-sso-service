@@ -21,7 +21,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthenticationGuard } from './authentication/guards/authentication.guard';
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
-const envFile = ".env" + (isDev ? ".dev" : "")
 
 @Module({
   imports: [
@@ -36,7 +35,10 @@ const envFile = ".env" + (isDev ? ".dev" : "")
     ConfigModule.forRoot(
       {
         isGlobal: true, 
-        envFilePath: envFile
+        envFilePath: [
+          ".env.dev",
+          ".env"
+        ]
       }
     ),  // Load .env file for configuration
     TypeOrmModule.forRoot({
@@ -47,7 +49,7 @@ const envFile = ".env" + (isDev ? ".dev" : "")
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       entities: [
-        ...[(isDev ? "dist/**/*.entity{ .ts,.js}" : "src/**/*.entity{ .ts,.js}")]
+        ...[(isDev ? "./**/*.entity{ .ts,.js}" : "./**/*.entity{.ts,.js}")]
       ],
       synchronize: true,
       entityPrefix: process.env.DB_PREFIX,

@@ -3,6 +3,7 @@ dist/
 node_modules/
 
 appconfig.json
+.env.dev
 
 uploads/
 package-lock.json

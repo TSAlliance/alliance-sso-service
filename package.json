@@ -10,7 +10,7 @@
     "build": "nest build && npm run copy:ecosys",
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "cross-env NODE_ENV=production nest start",
     "start:pm2": "pm2 reload ecosystem.config.js",
     "copy:ecosys": "cpx ecosystem.config.js dist/ && cpx package.json dist/ && cpx .env dist/"
   },
