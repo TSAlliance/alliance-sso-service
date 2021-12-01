@@ -9,8 +9,7 @@ module.exports = {
         time: false,
         exec_interpreter: "node",
         env: {
-            APP_PORT: 3388,
-            NODE_ENV: "production"
+            APP_PORT: 3388
         }
     }]
 }
