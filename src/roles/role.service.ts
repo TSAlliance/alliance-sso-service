@@ -21,6 +21,9 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return result
     }
 
+    // TODO: Fix >> Duplicate entry when creating role and specifying permissions: DUPLICATE ENTRY IN DB.
+    // Creation works, but only no permissions are selected.
+
     public async findById(roleId: string, options?: FindManyOptions<Role>): Promise<Role> {
         const result = await this.roleRepository.findOne({...options, where: { id: roleId }})
         return result;
