@@ -1,10 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
-import { Authentication, CanAccess } from "@tsalliance/rest";
+import { Authentication, CanAccess, RestAccount } from "@tsalliance/rest";
 import { Pageable } from "nestjs-pager";
-import { Account } from "src/account/account.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
-import { UserDTO } from "./user.entity";
+import { User, UserDTO } from "./user.entity";
 import { UserService } from "./user.service";
 
 @ApiTags("User Controller")
@@ -34,14 +33,14 @@ export class UsersController {
 
     @Put(":userId")
     @CanAccess(PermissionCatalog.USERS_WRITE)
-    public async updateUser(@Param("userId") userId: string, @Body() user: UserDTO, @Authentication() account: Account) {
-        return this.userService.update(userId, user, account);
+    public async updateUser(@Param("userId") userId: string, @Body() user: UserDTO, @Authentication() account: RestAccount) {
+        return this.userService.update(userId, user, account as User);
     }
 
     @Delete(":userId")
     @CanAccess(PermissionCatalog.USERS_WRITE)
-    public async deleteUser(@Param("userId") userId: string, @Authentication() account: Account) {
-        return this.userService.delete(userId, account)
+    public async deleteUser(@Param("userId") userId: string, @Authentication() account: RestAccount) {
+        return this.userService.delete(userId, account as User)
     }
 
 

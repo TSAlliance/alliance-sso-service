@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Authentication, CanAccess } from '@tsalliance/rest';
+import { Authentication, CanAccess, RestAccount } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
 import { PermissionCatalog } from 'src/permission/permission.registry';
 import { DeleteResult } from 'typeorm';
 import { Service, ServiceDTO } from './service.entity';
@@ -18,7 +17,7 @@ export class ServiceController {
 
     @Get()
     // @CanAccess([PermissionCatalog.SERVICES_READ,PermissionCatalog.SERVICES_WRITE])
-    public async findAll(@Authentication() authentication: Account, @Pageable() pageable?: Pageable) {
+    public async findAll(@Authentication() authentication: RestAccount, @Pageable() pageable?: Pageable) {
         if(!authentication || !authentication.hasPermission(PermissionCatalog.SERVICES_WRITE.value) && !authentication.hasPermission(PermissionCatalog.SERVICES_READ.value)) {
             return this.serviceService.findAllListed(pageable)
         }
@@ -27,9 +26,7 @@ export class ServiceController {
     }
 
     @Get(":serviceId")
-    // @CanAccess([PermissionCatalog.SERVICES_READ, PermissionCatalog.SERVICES_WRITE])
-    // @CanAccess(true)
-    public async getService(@Param("serviceId") serviceId: string, @Authentication() authentication: Account) {
+    public async findService(@Param("serviceId") serviceId: string, @Authentication() authentication: RestAccount) {
         if(serviceId == "root") {
             return this.serviceService.findRootService();
         }
@@ -38,7 +35,7 @@ export class ServiceController {
             return this.serviceService.findListedById(serviceId)
         }
         
-        return this.serviceService.findById(serviceId)
+        return this.serviceService.findByIdIncludingRelations(serviceId)
     }
 
     @Get("/byClientId/:clientId")

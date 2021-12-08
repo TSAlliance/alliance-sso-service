@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsOptional, IsUrl } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsUrl } from "class-validator";
+import { AccountType } from "src/account/account";
 
 export class CreateAuthenticationDTO {
     
@@ -29,5 +30,10 @@ export class CreateAuthenticationDTO {
     @IsOptional({ message: "stayLoggedIn is Optional, but invalid value exists." })
     @IsBoolean({ message: "stayLoggedIn not a boolean." })
     public stayLoggedIn?: boolean;
+
+    @ApiProperty({ default: false, required: false })
+    @IsOptional({ message: "accountType is Optional, but invalid value exists." })
+    @IsEnum({ message: "accountType not a boolean." })
+    public accountType: AccountType;
 
 }

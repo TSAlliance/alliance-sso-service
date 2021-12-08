@@ -1,4 +1,4 @@
-import { AccountType } from "src/account/account.entity";
+import { AccountType } from "src/account/account";
 
 export class AccessTokenDTO {
 

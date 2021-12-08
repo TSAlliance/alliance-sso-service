@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Put } from '@nestjs/common';
-import { Authentication, IsAuthenticated } from '@tsalliance/rest';
-import { Account } from 'src/account/account.entity';
+import { Authentication, IsAuthenticated, RestAccount } from '@tsalliance/rest';
+import { User } from 'src/users/user.entity';
 import { AuthenticationService } from './authentication.service';
 import { CreateAuthenticationDTO } from './dto/create-authentication.dto';
 import { CreateAuthorizationDTO } from './dto/create-authorization.dto';
@@ -25,8 +25,8 @@ export class AuthenticationController {
 
   @Put("/password")
   @IsAuthenticated()
-  public async updatePassword(@Body() updatedPasswordDto: UpdatePasswordDTO, @Authentication() authentication: Account) {
-    return this.authenticationService.changePassword(authentication.id, updatedPasswordDto);
+  public async updatePassword(@Body() updatedPasswordDto: UpdatePasswordDTO, @Authentication() authentication: RestAccount) {
+    return this.authenticationService.changePassword((authentication as User).id, updatedPasswordDto);
   }
 
   @Post("/recovery/request")

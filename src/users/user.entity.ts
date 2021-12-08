@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { CanRead, RandomUtil } from "@tsalliance/rest";
-import { Account, AccountType } from "src/account/account.entity";
+import { AccountType } from "src/account/account";
 import { PermissionCatalog } from "src/permission/permission.registry";
 import { Role, RoleDTO } from "src/roles/role.entity";
-import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Service, ServiceDTO } from "../services/service.entity";
 
 export class UserDTO {
@@ -26,10 +26,22 @@ export class UserDTO {
     role?: Role;
 }
 
-@Entity({
-    
-})
-export class User extends Account {
+@Entity()
+export class User {
+
+    @PrimaryGeneratedColumn("uuid")
+    public id: string;
+
+    @CanRead(false)
+    @Column({ default: AccountType.USER })
+    public accountType: AccountType;
+
+    @CreateDateColumn()
+    public createdAt: Date;
+
+    @CanRead(false)
+    @Column({ nullable: false })
+    public credentialHash: string;
     
     @Column({ length: 32, nullable: false, unique: true })
     public username: string;

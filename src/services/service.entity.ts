@@ -1,9 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CanRead, RandomUtil } from "@tsalliance/rest";
-import { Account, AccountType } from "src/account/account.entity";
+import { CanRead, RandomUtil, RestAccount } from "@tsalliance/rest";
+import { AccountType } from "src/account/account";
 import { Permission } from "src/permission/permission.entity";
 import { PermissionCatalog } from "src/permission/permission.registry";
-import { BeforeInsert, Column, Entity, OneToMany } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ServiceRedirectUri } from "./redirect.entity";
 
 export class ServiceDTO {
@@ -24,7 +24,21 @@ export class ServiceDTO {
 }
 
 @Entity()
-export class Service extends Account implements ServiceDTO {
+export class Service implements ServiceDTO, RestAccount {
+
+    @PrimaryGeneratedColumn("uuid")
+    public id: string;
+
+    @CanRead(false)
+    @Column({ default: AccountType.USER })
+    public accountType: AccountType;
+
+    @CreateDateColumn()
+    public createdAt: Date;
+
+    @CanRead(false)
+    @Column({ nullable: false })
+    public credentialHash: string;
 
     @Column({ length: 32 })
     public title: string;

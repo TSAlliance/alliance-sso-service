@@ -1,8 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, Scope, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AccountNotFoundException, InsufficientPermissionException, PROPERTY_PERMISSION_META_KEY } from '@tsalliance/rest';
+import { AccountNotFoundException, InsufficientPermissionException, PROPERTY_PERMISSION_META_KEY, RestAccount } from '@tsalliance/rest';
 import { Observable } from 'rxjs';
-import { Account } from 'src/account/account.entity';
 import { AuthenticationService } from '../authentication.service';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -39,7 +38,7 @@ export class AuthenticationGuard implements CanActivate {
         // is authenticated if a header was found.
         // Decode access token and validate it to retrieve account data
         const decodedToken = await this.authService.decodeAccessToken(authHeaderValue)
-        let account: Account = null;
+        let account: RestAccount = null;
 
         if(decodedToken) {
           account = await this.authService.authenticateAccessToken(decodedToken)

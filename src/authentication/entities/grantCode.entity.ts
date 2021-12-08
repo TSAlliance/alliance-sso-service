@@ -1,5 +1,5 @@
 import { CanRead, RandomUtil } from "@tsalliance/rest";
-import { AccountType } from "src/account/account.entity";
+import { AccountType } from "src/account/account";
 import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -31,7 +31,6 @@ export class GrantCode {
     @CreateDateColumn()
     public issuedAt: Date;
 
-    @CanRead(false)
     @Column({ nullable: false })
     public expiresAt: Date;
 

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InsufficientPermissionException, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
 import { PermissionService } from 'src/permission/permission.service';
+import { User } from 'src/users/user.entity';
 import { DeleteResult, FindManyOptions } from 'typeorm';
 import { Role, RoleDTO } from './role.entity';
 import { RoleRepository } from './role.repository';
@@ -80,7 +80,7 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return this.roleRepository.save(role);
     }
 
-    public async update(roleId: string, data: RoleDTO, account?: Account): Promise<Role> {
+    public async update(roleId: string, data: RoleDTO, account?: User): Promise<Role> {
         const validator = new Validator()
         const role: Role = await this.findById(roleId);        
         if(!role) throw new NotFoundException();
@@ -105,7 +105,7 @@ export class RoleService extends RestService<Role, RoleDTO, RoleRepository> {
         return this.roleRepository.save(role);
     }
 
-    public async delete(id: string, account?: Account): Promise<DeleteResult> {
+    public async delete(id: string, account?: User): Promise<DeleteResult> {
         return this.roleRepository.manager.transaction(async () => {
             const role = await this.findById(id);
 

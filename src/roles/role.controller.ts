@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Authentication, CanAccess } from '@tsalliance/rest';
+import { Authentication, CanAccess, RestAccount } from '@tsalliance/rest';
 import { Pageable } from 'nestjs-pager';
-import { Account } from 'src/account/account.entity';
 import { PermissionCatalog } from 'src/permission/permission.registry';
+import { User } from 'src/users/user.entity';
 import { RoleDTO } from './role.entity';
 import { RoleService } from './role.service';
 
@@ -34,14 +34,14 @@ export class RolesController {
 
     @Put(":roleId")
     @CanAccess(PermissionCatalog.ROLES_WRITE)
-    public async updateRole(@Param("roleId") roleId: string, @Body() role: RoleDTO, @Authentication() account: Account) {
-        return this.roleService.update(roleId, role, account);
+    public async updateRole(@Param("roleId") roleId: string, @Body() role: RoleDTO, @Authentication() account: RestAccount) {
+        return this.roleService.update(roleId, role, account as User);
     }
 
     @Delete(":roleId")
     @CanAccess(PermissionCatalog.ROLES_WRITE)
-    public async deleteRole(@Param("roleId") roleId: string, @Authentication() account: Account) {
-        return this.roleService.delete(roleId, account);
+    public async deleteRole(@Param("roleId") roleId: string, @Authentication() account: RestAccount) {
+        return this.roleService.delete(roleId, account as User);
     }
 
 }

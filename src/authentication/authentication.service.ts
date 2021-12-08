@@ -1,8 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CredentialsMismatchException } from '@tsalliance/rest';
 import { DeleteResult } from 'typeorm';
-import { AccountType } from 'src/account/account.entity';
 import { InviteService } from 'src/invite/invite.service';
 import { MailService } from 'src/mail/mail.service';
 import { Service } from 'src/services/service.entity';
@@ -23,6 +22,7 @@ import { RecoveryTokenRepository } from './repositories/recoveryToken.repository
 import { AccountRecoveryToken } from './entities/recoveryToken.entity';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
 import { RecoverAccountDTO } from './dto/recover-account.dto';
+import { AccountType } from 'src/account/account';
 
 @Injectable()
 export class AuthenticationService {
@@ -43,36 +43,48 @@ export class AuthenticationService {
      * @param createAuthenticationDto Data needed to issue grantCode
      */
     public async authenticate(createAuthenticationDto: CreateAuthenticationDTO): Promise < Authentication > {
-        let account: User;
+        let account: User | Service;
 
         const grantCode = new GrantCode();
         grantCode.clientId = createAuthenticationDto.clientId;
         grantCode.accountType = AccountType.USER;
         grantCode.stayLoggedIn = createAuthenticationDto.stayLoggedIn;
 
-        // Check if redirect_uri matches client_id of service.
-        // If not, reject authentication request.
-        if (!this.serviceService.hasRedirectUri(createAuthenticationDto.clientId, createAuthenticationDto.redirectUri)) {
-            throw new BadRequestException("Invalid redirect uri.")
-        }
+        if(createAuthenticationDto.accountType == AccountType.SERVICE) {
+            grantCode.accountType = AccountType.SERVICE;
 
-        // Check if there already is a valid accessToken available and check if it is still functional.
-        // If everything is fine, proceed and create a new grantCode.
-        if (createAuthenticationDto.useExistingAccessToken) {
-            const accessTokenDto = await this.decodeAccessToken(createAuthenticationDto.useExistingAccessToken);
-            account = await this.authenticateAccessToken(accessTokenDto) as User;
-            
-            if(!account) throw new BadRequestException("Your account does not exist.");
-        } else {
-            // Find user by provided login credentials
-            // If account does not exist, throw error.
-            account = await this.userService.findByEmailOrUsername(createAuthenticationDto.identifier, createAuthenticationDto.identifier);
-            if (!account) throw new BadRequestException("Your account does not exist.");
+            account = await this.serviceService.findByClientId(createAuthenticationDto.identifier);
+            if (!account) throw new BadRequestException("Account for client_id does not exist.");
 
-            // Compare provided password with the save password in the database.
-            // Throw error if they don't match
-            if (!this.passwordService.comparePasswords(createAuthenticationDto.password, account.password)) {
+            if (account.clientSecret != createAuthenticationDto.password) {
                 throw new CredentialsMismatchException();
+            }
+        } else {
+
+            // Check if redirect_uri matches client_id of service.
+            // If not, reject authentication request.
+            if (!this.serviceService.hasRedirectUri(createAuthenticationDto.clientId, createAuthenticationDto.redirectUri)) {
+                throw new BadRequestException("Invalid redirect uri.")
+            }
+
+            // Check if there already is a valid accessToken available and check if it is still functional.
+            // If everything is fine, proceed and create a new grantCode.
+            if (createAuthenticationDto.useExistingAccessToken) {
+                const accessTokenDto = await this.decodeAccessToken(createAuthenticationDto.useExistingAccessToken);
+                account = await this.authenticateAccessToken(accessTokenDto) as User;
+                
+                if(!account) throw new BadRequestException("Your account does not exist.");
+            } else {
+                // Find user by provided login credentials
+                // If account does not exist, throw error.
+                account = await this.userService.findByEmailOrUsername(createAuthenticationDto.identifier, createAuthenticationDto.identifier);
+                if (!account) throw new BadRequestException("Your account does not exist.");
+
+                // Compare provided password with the save password in the database.
+                // Throw error if they don't match
+                if (!this.passwordService.comparePasswords(createAuthenticationDto.password, account.password)) {
+                    throw new CredentialsMismatchException();
+                }
             }
         }
 
@@ -90,16 +102,22 @@ export class AuthenticationService {
         const grantCode = await this.grantCodeRepository.findOne({ where: { grantCode: createAuthorizationDto.grantCode }});
         if(!grantCode) throw new BadRequestException("Invalid grant code.");
 
-        if(!await this.serviceService.hasRedirectUri(grantCode.clientId, createAuthorizationDto.redirectUri)) {
-            throw new BadRequestException("Invalid redirect_uri.");
+        let account: User | Service;
+        const expiresAt = grantCode.stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7));
+        
+        if(grantCode.accountType == AccountType.SERVICE) {
+            // TODO: Require check for redirect uri
+            account = await this.serviceService.findById(grantCode.accountId)
+        } else {
+            if(!await this.serviceService.hasRedirectUri(grantCode.clientId, createAuthorizationDto.redirectUri)) {
+                throw new BadRequestException("Invalid redirect_uri.");
+            }
+    
+            account = await this.userService.findById(grantCode.accountId)
         }
 
-        const account = await this.userService.findById(grantCode.accountId)
         if(!account) throw new BadRequestException("Your account does not exist.");
-
-        const expiresAt = grantCode.stayLoggedIn ? undefined : new Date(Date.now() + (1000 * 60 * 60 * 24 * 7));
         const authorization = new Authorization(await this.generateAccessToken(grantCode, account.credentialHash), expiresAt);
-
         await this.grantCodeRepository.delete({ accountId: grantCode.accountId });
         return authorization;
     }

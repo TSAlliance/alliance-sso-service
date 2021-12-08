@@ -22,6 +22,8 @@ import { AuthenticationGuard } from './authentication/guards/authentication.guar
 
 const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
 
+// TODO: Implement cleanup service, to clean invalid invites, grantCodes etc
+
 @Module({
   imports: [
     ValidatorModule,
@@ -51,7 +53,7 @@ const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
       entities: [
         ...[(isDev ? "./**/*.entity{ .ts,.js}" : "./**/*.entity{.ts,.js}")]
       ],
-      synchronize: JSON.parse(process.env.DB_SYNCHRONIZE),
+      synchronize: process.env.DB_SYNC.toString() == "true",
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
       retryDelay: 10000,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InsufficientPermissionException, RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { DeleteResult, FindManyOptions } from 'typeorm';
@@ -132,7 +132,17 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
 
     public async hasRedirectUri(serviceClientId: string, redirectUri: string): Promise<boolean> {
         if((await this.findRootService()).clientId == serviceClientId) return true;
-        return !!(await this.findByIdIncludingRelations(serviceClientId)).redirectUris.find((uri) => uri.uri == redirectUri)
+        const app = await this.findByIdIncludingRelations(serviceClientId);
+
+        if(!app) {
+            throw new NotFoundException("Account for client_id not found.")
+        }
+
+        if(!app.redirectUris || app.redirectUris.length <= 0) {
+            throw new BadRequestException("Invalid redirect uri.");
+        }
+
+        return !!app.redirectUris.find((uri) => uri.uri == redirectUri)
     }
 
 }
