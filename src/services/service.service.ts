@@ -132,7 +132,7 @@ export class ServiceService extends RestService<Service, ServiceDTO, ServiceRepo
 
     public async hasRedirectUri(serviceClientId: string, redirectUri: string): Promise<boolean> {
         if((await this.findRootService()).clientId == serviceClientId) return true;
-        const app = await this.findByIdIncludingRelations(serviceClientId);
+        const app = await this.findByClientIdIncludingRelations(serviceClientId);
 
         if(!app) {
             throw new NotFoundException("Account for client_id not found.")
