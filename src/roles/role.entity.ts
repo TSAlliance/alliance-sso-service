@@ -34,7 +34,7 @@ export class Role {
     @CanRead([PermissionCatalog.ROLES_READ,PermissionCatalog.ROLES_WRITE])
     @ManyToMany(() => Permission)
     @JoinTable({ name: "role_permissions" })
-    public permissions: Permission[]
+    public permissions: Permission[] | string[]
 
     @CanRead([PermissionCatalog.ROLES_READ,PermissionCatalog.ROLES_WRITE])
     @Column({ nullable: false, default: 0 })

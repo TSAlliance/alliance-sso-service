@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { InsufficientPermissionException, RandomUtil, RestAccount, RestService, Validator } from '@tsalliance/rest';
+import { InsufficientPermissionException, RandomUtil, RestService, Validator } from '@tsalliance/rest';
 import { Page, Pageable } from 'nestjs-pager';
 import { PasswordService } from 'src/authentication/password.service';
 import { DeleteResult, FindManyOptions } from 'typeorm';
@@ -25,15 +25,24 @@ export class UserService extends RestService<User, UserDTO, UserRepository> {
 
     public async findById(userId: string): Promise<User> {
         const result = await this.userRepository.findOne({ where: { id: userId }, relations: ["role", "role.permissions"]});
+
+        if(result.role) {
+            result.role.permissions = result.role.permissions.map((permission) => permission.value)
+        }
+
         return Object.assign(new User(), result);
     }
 
     public async findAllByRoleId(roleId: string): Promise<User[]> {
-        return this.userRepository.find({ where: { role: { id: roleId }}});
+        const result = await this.userRepository.find({ where: { role: { id: roleId }}})
+        return result;
     }
 
     public async findByIdOrFail(userId: string): Promise<User> {
-        const result = await this.userRepository.findOneOrFail({ where: { id: userId }, relations: ["role", "role.permissions"]});     
+        const result = await this.userRepository.findOneOrFail({ where: { id: userId }, relations: ["role", "role.permissions"]}); 
+        if(result.role) {
+            result.role.permissions = result.role.permissions.map((permission) => permission.value)
+        }    
         return Object.assign(new User(), result);
     }
 
