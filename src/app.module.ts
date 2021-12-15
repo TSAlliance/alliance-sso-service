@@ -1,7 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { ResponseInterceptor, ValidatorModule } from '@tsalliance/rest';
+import { AllianceRestModule, ValidatorModule } from '@tsalliance/rest';
 import { ServiceModule } from './services/service.module';
 import { RolesModule } from './roles/role.module';
 import { UsersModule } from './users/user.module';
@@ -82,11 +82,13 @@ const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
           }
       }
     }),
+    AllianceRestModule.forRoot({
+      logging: true
+    }),
     SubscriberModule,
     AuthenticationModule
   ],
   providers: [ 
-    ResponseInterceptor, 
     {
       provide: APP_GUARD,
       useClass: AuthenticationGuard,
