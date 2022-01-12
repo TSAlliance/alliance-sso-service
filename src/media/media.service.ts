@@ -7,6 +7,7 @@ import { RandomUtil } from '@tsalliance/rest';
 import sharp, { OutputInfo } from 'sharp';
 import { UserService } from 'src/users/user.service';
 import { User } from 'src/users/user.entity';
+import { Response } from 'express';
 
 @Injectable()
 export class MediaService {
@@ -45,7 +46,7 @@ export class MediaService {
      * @param resourceHash Hash to identify the resource with
      * @returns StreamableFile object
      */
-    public async serveAvatar(resourceHash: string): Promise<StreamableFile> {
+    public async serveAvatar(resourceHash: string, response: Response) {
         const filepath = this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg";
         if(!existsSync(filepath)) {
             const svgData = await this.generateAvatar(resourceHash);
@@ -59,7 +60,7 @@ export class MediaService {
             })
         }
 
-        return new StreamableFile(createReadStream(this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg"));
+        createReadStream(this.AVATAR_UPLOAD_DIR + resourceHash + ".jpeg").pipe(response)
     }
 
     /**

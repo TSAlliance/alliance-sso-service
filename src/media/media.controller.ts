@@ -1,7 +1,8 @@
-import { BadRequestException, Controller, Get, Header, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Header, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { IsAuthenticated } from '@tsalliance/rest';
+import { Response } from 'express';
 import { AvatarUploadDTO } from './media.entity';
 import { MediaService } from './media.service';
 
@@ -28,8 +29,8 @@ export class MediaController {
 
     @Get("avatars/:resourceHash")
     @Header("Content-Type", "image/jpeg")
-    public async serveAvatar(@Param("resourceHash") resourceHash: string) {
-        return this.mediaService.serveAvatar(resourceHash)
+    public async serveAvatar(@Param("resourceHash") resourceHash: string, @Res() response: Response) {
+        return this.mediaService.serveAvatar(resourceHash, response)
     }
 
 }
