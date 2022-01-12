@@ -11,6 +11,8 @@ import { InviteModule } from 'src/invite/invite.module';
 import { ServiceModule } from 'src/services/service.module';
 import { JwtModule } from '@nestjs/jwt';
 
+// TODO: Every request must be done with user access token, even if it is performed by service. Also implement decorator on routes to disable endpoints for services. Maybe @Private()?
+
 @Module({
   controllers: [AuthenticationController],
   providers: [AuthenticationService, PasswordService],
