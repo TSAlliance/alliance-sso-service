@@ -10,9 +10,7 @@ const portMetric = io.metric({
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    cors: {
-      origin: "*"
-    }
+    cors: true
   });
   
   const swaggerConfig = new DocumentBuilder();
@@ -26,6 +24,8 @@ async function bootstrap() {
 
   const port = process.env.APP_PORT || 3000;
   portMetric.set(port.toString())
+
+  app.enableCors();
 
   await app.listen(port);
 }

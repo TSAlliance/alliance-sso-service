@@ -1,7 +1,7 @@
 module.exports = {
     apps: [{
         name: "Alliance-SSO",
-        script: "main.js",
+        script: "dist/main.js",
         increment_var: "APP_PORT",
         instances: 1,
         autorestart: true,

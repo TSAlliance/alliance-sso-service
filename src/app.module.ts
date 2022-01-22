@@ -51,15 +51,12 @@ const isDev = process.env.NODE_ENV && process.env.NODE_ENV !== 'production';
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       entities: [
-        ...[(isDev ? "./**/*.entity{ .ts,.js}" : "./**/*.entity{.ts,.js}")]
+        "dist/**/*.entity.js"
       ],
       synchronize: process.env.DB_SYNC.toString() == "true",
       entityPrefix: process.env.DB_PREFIX,
       retryAttempts: Number.MAX_VALUE,
-      retryDelay: 10000,
-      subscribers: [
-        ...[(isDev ? "dist/**/*.subscriber{ .ts,.js}" : "src/**/*.subscriber{ .ts,.js}")]
-      ]
+      retryDelay: 10000
     }),
     MailerModule.forRoot({
       transport: {
